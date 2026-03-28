@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vibecheck-ai"
+version = "0.2.0"
+description = "Security scanner for vibe-coded apps — catch what Copilot ships and Snyk overcharges for"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Alex LaGuardia", email = "alex@alexlaguardia.dev" }]
+keywords = ["security", "scanner", "vibe-coding", "ai", "copilot", "cursor"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+vibecheck = "vibecheck.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/AlexlaGuardia/vibe-check"
+Issues = "https://github.com/AlexlaGuardia/vibe-check/issues"
+
+[tool.hatch.build]
+include = ["vibecheck/**"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["vibecheck"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
