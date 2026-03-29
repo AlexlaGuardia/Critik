@@ -19,7 +19,8 @@ import vibecheck.checks.frameworks  # noqa: F401
 class Scanner:
     def __init__(self, path: str, min_severity: Severity = Severity.INFO,
                  extra_ignores: list[str] = None, ai: bool = False,
-                 ai_model: str = None, ai_key: str = None):
+                 ai_model: str = None, ai_key: str = None,
+                 use_baseline: bool = False, save_baseline: bool = False):
         self.root = Path(path).resolve()
         self.min_severity = min_severity
         self.custom_ignores = load_ignores(self.root)
@@ -28,6 +29,8 @@ class Scanner:
         self.ai = ai
         self.ai_model = ai_model
         self.ai_key = ai_key
+        self.use_baseline = use_baseline
+        self.save_baseline = save_baseline
 
     def scan(self) -> ScanResult:
         result = ScanResult()
@@ -50,6 +53,21 @@ class Scanner:
 
         # Sort: critical first, then by file
         result.findings.sort(key=lambda f: (-f.severity.rank, f.file_path, f.line))
+
+        # Save baseline if requested (before filtering)
+        if self.save_baseline:
+            from vibecheck.baseline import save_baseline
+            result.baseline_message = save_baseline(result, self.root)
+
+        # Apply baseline filter
+        if self.use_baseline:
+            from vibecheck.baseline import load_baseline, filter_baseline
+            baseline = load_baseline(self.root)
+            if baseline is not None:
+                removed = filter_baseline(result, baseline)
+                result.baseline_filtered = removed
+            else:
+                result.baseline_message = "  No baseline found. Run: vibecheck scan . --save-baseline"
 
         # Pass 2: AI analysis
         if self.ai and result.findings:

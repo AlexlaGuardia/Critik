@@ -30,6 +30,8 @@ def cmd_scan(args):
             ai=getattr(args, "ai", False),
             ai_model=getattr(args, "model", None),
             ai_key=getattr(args, "api_key", None),
+            use_baseline=getattr(args, "baseline", False),
+            save_baseline=getattr(args, "save_baseline", False),
         )
         result = scanner.scan()
     except FileNotFoundError as e:
@@ -53,6 +55,10 @@ def cmd_scan(args):
             no_color=args.no_color,
             quiet=args.quiet,
         ))
+
+    # Print baseline save message (outside formatted output)
+    if getattr(args, "save_baseline", False) and result.baseline_message:
+        print(result.baseline_message, file=sys.stderr)
 
     sys.exit(result.exit_code)
 
@@ -79,6 +85,18 @@ def cmd_rules(args):
         langs = ", ".join(c["languages"])
         print(f"  {sev}  {c['name']:30s}  ({langs})")
     print()
+
+
+def cmd_init(args):
+    """Initialize VibeCheck for this project."""
+    from vibecheck.init import run_init
+    print(run_init(args.path if hasattr(args, "path") else "."))
+
+
+def cmd_explain(args):
+    """Explain a specific check."""
+    from vibecheck.explain import explain_check
+    print(explain_check(args.check_name))
 
 
 def cmd_version(args):
@@ -112,14 +130,26 @@ def main():
                              help="LLM model override (default: llama-3.3-70b-versatile)")
     scan_parser.add_argument("--api-key", type=str, default=None,
                              help="API key (or set VIBECHECK_API_KEY / GROQ_API_KEY env var)")
+    scan_parser.add_argument("--baseline", action="store_true",
+                             help="Only show findings not in the saved baseline")
+    scan_parser.add_argument("--save-baseline", action="store_true",
+                             help="Save current findings as the baseline")
 
     # hook command
     hook_parser = subparsers.add_parser("hook", help="Manage pre-commit hook")
     hook_parser.add_argument("hook_action", choices=["install", "uninstall"], help="Install or uninstall")
     hook_parser.add_argument("path", nargs="?", default=".", help="Repo path (default: .)")
 
+    # init command
+    init_parser = subparsers.add_parser("init", help="Detect stack and generate .vibeignore")
+    init_parser.add_argument("path", nargs="?", default=".", help="Project path (default: .)")
+
     # rules command
     subparsers.add_parser("rules", help="List available checks")
+
+    # explain command
+    explain_parser = subparsers.add_parser("explain", help="Explain a specific check")
+    explain_parser.add_argument("check_name", help="Check name (e.g. secrets, injection, frameworks-supabase)")
 
     # version command
     subparsers.add_parser("version", help="Show version")
@@ -138,11 +168,15 @@ def main():
         args.ai = False
         args.model = None
         args.api_key = None
+        args.baseline = False
+        args.save_baseline = False
 
     commands = {
         "scan": cmd_scan,
+        "init": cmd_init,
         "hook": cmd_hook,
         "rules": cmd_rules,
+        "explain": cmd_explain,
         "version": cmd_version,
     }
 

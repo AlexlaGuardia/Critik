@@ -77,6 +77,12 @@ def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = Fa
 
     lines.append(summary)
 
+    # Baseline info
+    if result.baseline_filtered:
+        lines.append(f"  {_d(f'Baseline: {result.baseline_filtered} known findings hidden')}")
+    if result.baseline_message:
+        lines.append(f"  {result.baseline_message}")
+
     # AI summary
     if result.ai_enabled and result.ai_stats:
         stats = result.ai_stats

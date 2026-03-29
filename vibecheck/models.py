@@ -88,6 +88,8 @@ class ScanResult:
     duration_ms: float = 0
     ai_enabled: bool = False
     ai_stats: dict = field(default_factory=dict)
+    baseline_filtered: int = 0
+    baseline_message: str = ""
 
     @property
     def critical_count(self) -> int:
