@@ -38,9 +38,29 @@ class Finding:
     message: str = ""
     snippet: str = ""
     fix_hint: str = ""
+    # AI analysis fields (populated when --ai is used)
+    ai_verdict: Optional[str] = None  # "confirmed", "false_positive", "needs_review"
+    ai_confidence: Optional[int] = None  # 0-100
+    ai_explanation: Optional[str] = None
+    ai_fix: Optional[str] = None
+    ai_severity: Optional[str] = None  # adjusted severity, None = no change
+
+    @property
+    def effective_severity(self) -> "Severity":
+        """Return AI-adjusted severity if available, otherwise original."""
+        if self.ai_severity:
+            try:
+                return Severity(self.ai_severity)
+            except ValueError:
+                pass
+        return self.severity
+
+    @property
+    def is_false_positive(self) -> bool:
+        return self.ai_verdict == "false_positive"
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "check": self.check_name,
             "severity": self.severity.value,
             "file": self.file_path,
@@ -50,6 +70,15 @@ class Finding:
             "snippet": self.snippet,
             "fix": self.fix_hint,
         }
+        if self.ai_verdict is not None:
+            d["ai"] = {
+                "verdict": self.ai_verdict,
+                "confidence": self.ai_confidence,
+                "explanation": self.ai_explanation,
+                "fix": self.ai_fix,
+                "severity": self.ai_severity,
+            }
+        return d
 
 
 @dataclass
@@ -57,6 +86,8 @@ class ScanResult:
     findings: list[Finding] = field(default_factory=list)
     files_scanned: int = 0
     duration_ms: float = 0
+    ai_enabled: bool = False
+    ai_stats: dict = field(default_factory=dict)
 
     @property
     def critical_count(self) -> int:
@@ -81,7 +112,7 @@ class ScanResult:
         return 0
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "findings": [f.to_dict() for f in self.findings],
             "summary": {
                 "files_scanned": self.files_scanned,
@@ -93,3 +124,6 @@ class ScanResult:
                 "total": len(self.findings),
             },
         }
+        if self.ai_enabled:
+            d["ai"] = self.ai_stats
+        return d

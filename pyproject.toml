@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vibecheck-ai"
-version = "0.3.0"
+version = "0.4.0"
 description = "Security scanner for vibe-coded apps — catch what Copilot ships and Snyk overcharges for"
 readme = "README.md"
 license = "MIT"
@@ -25,7 +25,8 @@ classifiers = [
 vibecheck = "vibecheck.cli:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+ai = ["groq>=1.0"]
+dev = ["pytest>=7.0", "groq>=1.0"]
 
 [project.urls]
 Homepage = "https://github.com/AlexlaGuardia/vibe-check"

@@ -27,6 +27,9 @@ def cmd_scan(args):
             path=args.path,
             min_severity=min_severity,
             extra_ignores=extra_ignores,
+            ai=getattr(args, "ai", False),
+            ai_model=getattr(args, "model", None),
+            ai_key=getattr(args, "api_key", None),
         )
         result = scanner.scan()
     except FileNotFoundError as e:
@@ -103,6 +106,12 @@ def main():
                              help="Additional patterns to ignore (comma-separated)")
     scan_parser.add_argument("--no-color", action="store_true", help="Disable colored output")
     scan_parser.add_argument("--quiet", action="store_true", help="Only show summary")
+    scan_parser.add_argument("--ai", action="store_true",
+                             help="Enable AI-powered analysis (requires GROQ_API_KEY or VIBECHECK_API_KEY)")
+    scan_parser.add_argument("--model", type=str, default=None,
+                             help="LLM model override (default: llama-3.3-70b-versatile)")
+    scan_parser.add_argument("--api-key", type=str, default=None,
+                             help="API key (or set VIBECHECK_API_KEY / GROQ_API_KEY env var)")
 
     # hook command
     hook_parser = subparsers.add_parser("hook", help="Manage pre-commit hook")
@@ -126,6 +135,9 @@ def main():
         args.ignore = None
         args.no_color = False
         args.quiet = False
+        args.ai = False
+        args.model = None
+        args.api_key = None
 
     commands = {
         "scan": cmd_scan,

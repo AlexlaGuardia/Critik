@@ -18,12 +18,16 @@ import vibecheck.checks.frameworks  # noqa: F401
 
 class Scanner:
     def __init__(self, path: str, min_severity: Severity = Severity.INFO,
-                 extra_ignores: list[str] = None):
+                 extra_ignores: list[str] = None, ai: bool = False,
+                 ai_model: str = None, ai_key: str = None):
         self.root = Path(path).resolve()
         self.min_severity = min_severity
         self.custom_ignores = load_ignores(self.root)
         if extra_ignores:
             self.custom_ignores.extend(extra_ignores)
+        self.ai = ai
+        self.ai_model = ai_model
+        self.ai_key = ai_key
 
     def scan(self) -> ScanResult:
         result = ScanResult()
@@ -47,8 +51,49 @@ class Scanner:
         # Sort: critical first, then by file
         result.findings.sort(key=lambda f: (-f.severity.rank, f.file_path, f.line))
 
+        # Pass 2: AI analysis
+        if self.ai and result.findings:
+            self._run_ai_analysis(result)
+
         result.duration_ms = (time.monotonic() - start) * 1000
         return result
+
+    def _run_ai_analysis(self, result: ScanResult):
+        """Run AI analysis on findings."""
+        import sys
+        from vibecheck.ai import AIAnalyzer
+
+        analyzer = AIAnalyzer(api_key=self.ai_key, model=self.ai_model)
+        if not analyzer.available:
+            print(
+                "  No API key found. Set VIBECHECK_API_KEY or GROQ_API_KEY to enable AI analysis.",
+                file=sys.stderr,
+            )
+            return
+
+        files_done = 0
+        total_files = len(set(f.file_path for f in result.findings))
+
+        def on_file(file_path, count):
+            nonlocal files_done
+            files_done += 1
+            short = Path(file_path).name
+            print(
+                f"\r  AI analyzing [{files_done}/{total_files}] {short}...".ljust(60),
+                end="", file=sys.stderr, flush=True,
+            )
+
+        analyzer.analyze(result.findings, callback=on_file)
+        print("\r" + " " * 60 + "\r", end="", file=sys.stderr, flush=True)
+
+        result.ai_enabled = True
+        fp_count = sum(1 for f in result.findings if f.is_false_positive)
+        confirmed = sum(1 for f in result.findings if f.ai_verdict == "confirmed")
+        result.ai_stats = {
+            "confirmed": confirmed,
+            "false_positives": fp_count,
+            "needs_review": len(result.findings) - confirmed - fp_count,
+        }
 
     def _scan_file(self, file_path: Path, result: ScanResult):
         """Scan a single file with all applicable checks."""

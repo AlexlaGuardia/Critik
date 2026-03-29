@@ -13,6 +13,15 @@ COLORS = {
 BOLD = "\033[1m"
 DIM = "\033[2m"
 RESET = "\033[0m"
+GREEN = "\033[92m"
+STRIKETHROUGH = "\033[9m"
+
+# AI verdict labels
+VERDICT_STYLE = {
+    "confirmed": ("CONFIRMED", "\033[91m"),     # Red
+    "false_positive": ("FALSE POS", "\033[92m"),  # Green
+    "needs_review": ("REVIEW", "\033[93m"),       # Yellow
+}
 
 
 def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = False) -> str:
@@ -20,19 +29,23 @@ def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = Fa
     lines = []
 
     if no_color:
-        # Strip all ANSI codes
         _c = lambda s, *a: s  # noqa: E731
         _b = lambda s: s  # noqa: E731
         _d = lambda s: s  # noqa: E731
+        _raw = lambda s, code: s  # noqa: E731
     else:
         _c = lambda s, sev: f"{COLORS.get(sev, '')}{s}{RESET}"  # noqa: E731
         _b = lambda s: f"{BOLD}{s}{RESET}"  # noqa: E731
         _d = lambda s: f"{DIM}{s}{RESET}"  # noqa: E731
+        _raw = lambda s, code: f"{code}{s}{RESET}"  # noqa: E731
 
     if not quiet:
         from vibecheck import __version__
         lines.append("")
-        lines.append(f"  {_b('VibeCheck')} v{__version__} — scanned {result.files_scanned} files")
+        header = f"  {_b('VibeCheck')} v{__version__} — scanned {result.files_scanned} files"
+        if result.ai_enabled:
+            header += f"  {_raw('[AI]', GREEN)}"
+        lines.append(header)
         lines.append("")
 
         if not result.findings:
@@ -40,17 +53,7 @@ def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = Fa
             lines.append("")
         else:
             for finding in result.findings:
-                sev_label = finding.severity.value.upper().ljust(8)
-                lines.append(f"  {_c(sev_label, finding.severity)}  {_b(finding.check_name)}")
-                lines.append(f"  {_d(finding.file_path)}:{finding.line}  {finding.message}")
-
-                if finding.snippet:
-                    lines.append(f"  {_d('|')} {finding.line} {_d('|')} {finding.snippet}")
-
-                if finding.fix_hint:
-                    lines.append(f"  {_d('+-')} Fix: {finding.fix_hint}")
-
-                lines.append("")
+                _format_finding(lines, finding, result.ai_enabled, _c, _b, _d, _raw)
 
     # Summary line
     lines.append(f"  {'─' * 45}")
@@ -73,6 +76,57 @@ def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = Fa
         summary = f"  {result.files_scanned} files scanned in {duration} — {total} findings: {', '.join(parts)}"
 
     lines.append(summary)
+
+    # AI summary
+    if result.ai_enabled and result.ai_stats:
+        stats = result.ai_stats
+        ai_parts = []
+        if stats.get("confirmed"):
+            ai_parts.append(_c(f"{stats['confirmed']} confirmed", Severity.CRITICAL))
+        if stats.get("false_positives"):
+            ai_parts.append(_raw(f"{stats['false_positives']} false positives", GREEN))
+        if stats.get("needs_review"):
+            ai_parts.append(_c(f"{stats['needs_review']} needs review", Severity.MEDIUM))
+        lines.append(f"  AI analysis: {', '.join(ai_parts)}")
+
     lines.append("")
 
     return "\n".join(lines)
+
+
+def _format_finding(lines, finding, ai_enabled, _c, _b, _d, _raw):
+    """Format a single finding with optional AI annotations."""
+    is_fp = finding.is_false_positive
+    sev = finding.effective_severity if ai_enabled else finding.severity
+    sev_label = sev.value.upper().ljust(8)
+
+    if is_fp:
+        # Dim the entire finding for false positives
+        lines.append(f"  {_d(sev_label)}  {_d(finding.check_name)}")
+        lines.append(f"  {_d(finding.file_path)}:{finding.line}  {_d(finding.message)}")
+    else:
+        lines.append(f"  {_c(sev_label, sev)}  {_b(finding.check_name)}")
+        lines.append(f"  {_d(finding.file_path)}:{finding.line}  {finding.message}")
+
+    if finding.snippet and not is_fp:
+        lines.append(f"  {_d('|')} {finding.line} {_d('|')} {finding.snippet}")
+
+    # AI verdict badge
+    if ai_enabled and finding.ai_verdict:
+        verdict_label, verdict_color = VERDICT_STYLE.get(
+            finding.ai_verdict, ("UNKNOWN", DIM)
+        )
+        conf = f" ({finding.ai_confidence}%)" if finding.ai_confidence is not None else ""
+        lines.append(f"  {_raw(verdict_label, verdict_color)}{conf}")
+
+        if finding.ai_explanation:
+            lines.append(f"  {_d('>')} {finding.ai_explanation}")
+
+        if finding.ai_fix and not is_fp:
+            lines.append(f"  {_raw('Fix:', GREEN)} {finding.ai_fix}")
+        elif finding.ai_severity and finding.ai_severity != finding.severity.value:
+            lines.append(f"  {_d('Severity adjusted:')} {finding.severity.value} -> {finding.ai_severity}")
+    elif finding.fix_hint and not is_fp:
+        lines.append(f"  {_d('+-')} Fix: {finding.fix_hint}")
+
+    lines.append("")
