@@ -1,6 +1,6 @@
-"""Tests for vibecheck explain — check explanations."""
+"""Tests for critik explain — check explanations."""
 
-from vibecheck.explain import explain_check, EXPLANATIONS
+from critik.explain import explain_check, EXPLANATIONS
 
 
 class TestExplainCheck:
@@ -39,13 +39,13 @@ class TestExplainCheck:
 
     def test_all_registered_checks_have_explanations(self):
         # Import to trigger registration
-        import vibecheck.checks.secrets  # noqa: F401
-        import vibecheck.checks.injection  # noqa: F401
-        import vibecheck.checks.auth  # noqa: F401
-        import vibecheck.checks.config  # noqa: F401
-        import vibecheck.checks.dotenv  # noqa: F401
-        import vibecheck.checks.frameworks  # noqa: F401
-        from vibecheck.checks import get_checks
+        import critik.checks.secrets  # noqa: F401
+        import critik.checks.injection  # noqa: F401
+        import critik.checks.auth  # noqa: F401
+        import critik.checks.config  # noqa: F401
+        import critik.checks.dotenv  # noqa: F401
+        import critik.checks.frameworks  # noqa: F401
+        from critik.checks import get_checks
 
         check_names = {c["name"] for c in get_checks()}
         explained = set(EXPLANATIONS.keys())

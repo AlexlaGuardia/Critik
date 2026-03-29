@@ -1,11 +1,11 @@
-"""Tests for vibecheck init — framework detection and .vibeignore generation."""
+"""Tests for critik init — framework detection and .critikignore generation."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from vibecheck.init import detect_stack, generate_vibeignore, run_init
+from critik.init import detect_stack, generate_critikignore, run_init
 
 
 class TestDetectStack:
@@ -85,39 +85,39 @@ class TestDetectStack:
 
 class TestGenerateVibeignore:
     def test_base_ignores_always_present(self, tmp_path):
-        content = generate_vibeignore(tmp_path, [])
+        content = generate_critikignore(tmp_path, [])
         assert "node_modules/" in content
         assert "__pycache__/" in content
         assert "tests/fixtures/" in content
 
     def test_nextjs_ignores_added(self, tmp_path):
         detected = [("Next.js", "frontend")]
-        content = generate_vibeignore(tmp_path, detected)
+        content = generate_critikignore(tmp_path, detected)
         assert ".next/" in content
         assert ".vercel/" in content
 
     def test_django_ignores_added(self, tmp_path):
         detected = [("Django", "backend")]
-        content = generate_vibeignore(tmp_path, detected)
+        content = generate_critikignore(tmp_path, detected)
         assert "staticfiles/" in content
 
     def test_rust_ignores_added(self, tmp_path):
         detected = [("Rust", "language")]
-        content = generate_vibeignore(tmp_path, detected)
+        content = generate_critikignore(tmp_path, detected)
         assert "target/" in content
 
 
 class TestRunInit:
-    def test_creates_vibeignore(self, tmp_path):
+    def test_creates_critikignore(self, tmp_path):
         result = run_init(str(tmp_path))
-        assert "Created .vibeignore" in result
-        assert (tmp_path / ".vibeignore").exists()
+        assert "Created .critikignore" in result
+        assert (tmp_path / ".critikignore").exists()
 
-    def test_skips_existing_vibeignore(self, tmp_path):
-        (tmp_path / ".vibeignore").write_text("custom rules")
+    def test_skips_existing_critikignore(self, tmp_path):
+        (tmp_path / ".critikignore").write_text("custom rules")
         result = run_init(str(tmp_path))
         assert "already exists" in result
-        assert (tmp_path / ".vibeignore").read_text() == "custom rules"
+        assert (tmp_path / ".critikignore").read_text() == "custom rules"
 
     def test_shows_detected_stack(self, tmp_path):
         pkg = {"dependencies": {"next": "14", "@supabase/supabase-js": "2"}}
@@ -140,4 +140,4 @@ class TestRunInit:
     def test_empty_project(self, tmp_path):
         result = run_init(str(tmp_path))
         assert "No frameworks detected" in result
-        assert "Created .vibeignore" in result
+        assert "Created .critikignore" in result

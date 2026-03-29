@@ -15,12 +15,12 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 def run_cli(*args) -> tuple[str, int]:
     """Run CLI and capture output + exit code."""
-    from vibecheck.cli import main
+    from critik.cli import main
 
     captured = StringIO()
     exit_code = 0
 
-    with patch("sys.argv", ["vibecheck"] + list(args)):
+    with patch("sys.argv", ["critik"] + list(args)):
         with patch("sys.stdout", captured):
             try:
                 main()
@@ -32,8 +32,8 @@ def run_cli(*args) -> tuple[str, int]:
 
 def test_version():
     output, code = run_cli("version")
-    from vibecheck import __version__
-    assert f"vibecheck {__version__}" in output
+    from critik import __version__
+    assert f"critik {__version__}" in output
     assert code == 0
 
 
@@ -73,7 +73,7 @@ def test_severity_filter():
 def test_quiet_mode():
     output, code = run_cli("scan", str(FIXTURES_DIR), "--quiet")
     # Should only have summary line, not individual findings
-    assert "VibeCheck" not in output  # No header in quiet mode
+    assert "Critik" not in output  # No header in quiet mode
 
 
 def test_no_color():

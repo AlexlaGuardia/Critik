@@ -1,10 +1,10 @@
-# VibeCheck
+# Critik
 
 Security scanner for vibe-coded apps. Catch what Copilot ships and Snyk overcharges for.
 
 ```bash
-pip install vibecheck-ai
-vibecheck scan .
+pip install critik
+critik scan .
 ```
 
 ## What it catches
@@ -21,19 +21,19 @@ vibecheck scan .
 
 ```bash
 # Scan current directory
-vibecheck scan .
+critik scan .
 
 # Scan specific path
-vibecheck scan ./src
+critik scan ./src
 
 # JSON output (for CI/CD)
-vibecheck scan . --format json
+critik scan . --format json
 
 # Only show critical and high
-vibecheck scan . --severity high
+critik scan . --severity high
 
 # Quiet mode (summary only)
-vibecheck scan . --quiet
+critik scan . --quiet
 ```
 
 ## Exit codes
@@ -52,7 +52,7 @@ vibecheck scan . --quiet
 
 ## Ignore patterns
 
-Create a `.vibeignore` file in your project root:
+Create a `.critikignore` file in your project root:
 
 ```
 # Skip test fixtures
@@ -63,10 +63,10 @@ generated/*
 
 ## GitHub Action
 
-Add to `.github/workflows/vibecheck.yml`:
+Add to `.github/workflows/critik.yml`:
 
 ```yaml
-name: VibeCheck
+name: Critik
 on: [push, pull_request]
 jobs:
   scan:
@@ -76,20 +76,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install vibecheck-ai
-      - run: vibecheck scan .
+      - run: pip install critik
+      - run: critik scan .
 ```
 
 For GitHub Code Scanning integration (findings appear inline on PRs):
 
 ```yaml
-      - run: vibecheck scan . --format sarif > vibecheck.sarif
+      - run: critik scan . --format sarif > critik.sarif
       - uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: vibecheck.sarif
+          sarif_file: critik.sarif
 ```
 
-## Why VibeCheck?
+## Why Critik?
 
 53% of teams that shipped AI-generated code discovered security issues that passed review. The vibe coding era needs a security scanner that's:
 

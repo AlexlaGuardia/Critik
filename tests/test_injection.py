@@ -1,7 +1,7 @@
 """Tests for injection detection."""
 
 from pathlib import Path
-from vibecheck.checks.injection import check_injection
+from critik.checks.injection import check_injection
 
 
 def test_sql_fstring():

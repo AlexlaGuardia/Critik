@@ -3,8 +3,8 @@
 import re
 from pathlib import Path
 
-from vibecheck.checks import check
-from vibecheck.models import Finding, Severity
+from critik.checks import check
+from critik.models import Finding, Severity
 
 # Keys that commonly hold secrets
 SECRET_KEY_NAMES = re.compile(

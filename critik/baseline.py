@@ -5,17 +5,17 @@ Solves the "legacy codebase" onboarding problem: scan a project with
 findings that weren't in the baseline.
 
 Usage:
-  vibecheck scan . --save-baseline    # save current findings to .vibecheck-baseline.json
-  vibecheck scan . --baseline         # compare against saved baseline, show only new
+  critik scan . --save-baseline    # save current findings to .critik-baseline.json
+  critik scan . --baseline         # compare against saved baseline, show only new
 """
 
 import hashlib
 import json
 from pathlib import Path
 
-from vibecheck.models import Finding, ScanResult
+from critik.models import Finding, ScanResult
 
-BASELINE_FILE = ".vibecheck-baseline.json"
+BASELINE_FILE = ".critik-baseline.json"
 
 
 def finding_fingerprint(finding: Finding) -> str:

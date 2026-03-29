@@ -1,7 +1,7 @@
 """SARIF output formatter — compatible with GitHub Code Scanning."""
 
 import json
-from vibecheck.models import ScanResult, Severity
+from critik.models import ScanResult, Severity
 
 SARIF_SEVERITY_MAP = {
     Severity.CRITICAL: "error",
@@ -24,7 +24,7 @@ def format_sarif(result: ScanResult) -> str:
             rules[rule_id] = {
                 "id": rule_id,
                 "shortDescription": {"text": finding.message},
-                "helpUri": "https://github.com/AlexlaGuardia/vibecheck",
+                "helpUri": "https://github.com/AlexlaGuardia/critik",
                 "properties": {
                     "security-severity": str({
                         Severity.CRITICAL: 9.5,
@@ -59,9 +59,9 @@ def format_sarif(result: ScanResult) -> str:
         "runs": [{
             "tool": {
                 "driver": {
-                    "name": "VibeCheck",
+                    "name": "Critik",
                     "version": "0.1.0",
-                    "informationUri": "https://github.com/AlexlaGuardia/vibecheck",
+                    "informationUri": "https://github.com/AlexlaGuardia/critik",
                     "rules": list(rules.values()),
                 },
             },

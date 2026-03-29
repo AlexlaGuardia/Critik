@@ -5,7 +5,7 @@ For each finding, generates an AI-ready prompt that explains the vulnerability
 and asks the AI to fix it with the exact file context.
 """
 
-from vibecheck.models import ScanResult, Finding, Severity
+from critik.models import ScanResult, Finding, Severity
 
 COLORS = {
     Severity.CRITICAL: "\033[91m",
@@ -66,9 +66,9 @@ def format_fix_prompts(result: ScanResult, no_color: bool = False) -> str:
         box_mid = f"{DIM}\u2502{RESET} "
         box_bot = f"{DIM}\u2514\u2500{RESET}"
 
-    from vibecheck import __version__
+    from critik import __version__
     lines.append("")
-    lines.append(f"  {_b('VibeCheck')} v{__version__} — {_cy('Fix Prompts')}")
+    lines.append(f"  {_b('Critik')} v{__version__} — {_cy('Fix Prompts')}")
     lines.append(f"  {_d('Copy any prompt below into Cursor / Claude / ChatGPT')}")
     lines.append("")
 

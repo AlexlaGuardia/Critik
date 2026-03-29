@@ -1,6 +1,6 @@
 """Watch mode — continuous scanning on file changes.
 
-vibecheck watch . — monitors the project for changes and re-scans
+critik watch . — monitors the project for changes and re-scans
 modified files. Terminal-first alternative to the VS Code extension.
 """
 
@@ -9,9 +9,9 @@ import sys
 import time
 from pathlib import Path
 
-from vibecheck.ignores import detect_language, load_ignores, should_skip
-from vibecheck.models import Severity
-from vibecheck.scanner import Scanner
+from critik.ignores import detect_language, load_ignores, should_skip
+from critik.models import Severity
+from critik.scanner import Scanner
 
 # Minimum interval between scans of the same file (seconds)
 DEBOUNCE_SECONDS = 1.0
@@ -100,7 +100,7 @@ def _walk_watchable(root: Path, custom_ignores: list[str]):
 
 def _scan_and_report(file_path: Path, root: Path, min_severity: Severity, ai: bool):
     """Scan a single file and print results inline."""
-    from vibecheck.formatters.terminal import COLORS, BOLD, DIM, RESET
+    from critik.formatters.terminal import COLORS, BOLD, DIM, RESET
 
     scanner = Scanner(
         path=str(file_path),

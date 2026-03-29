@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from vibecheck.custom_rules import (
+from critik.custom_rules import (
     load_custom_rules,
     scan_with_custom_rules,
     validate_rule_file,
@@ -11,7 +11,7 @@ from vibecheck.custom_rules import (
     reset_custom_rules,
     _parse_rule,
 )
-from vibecheck.models import Severity
+from critik.models import Severity
 
 # Check if PyYAML is available
 try:
@@ -31,7 +31,7 @@ def reset():
 
 def _write_rule(tmp_path, filename="test.yml", content=None):
     """Helper to write a rule file."""
-    rules_dir = tmp_path / ".vibecheck" / "rules"
+    rules_dir = tmp_path / ".critik" / "rules"
     rules_dir.mkdir(parents=True, exist_ok=True)
     rule_file = rules_dir / filename
     if content is None:
@@ -215,15 +215,15 @@ class TestInstallRuleFile:
 
         result = install_rule_file(str(source), str(project))
         assert "Installed" in result
-        assert (project / ".vibecheck" / "rules" / "my_rules.yml").exists()
+        assert (project / ".critik" / "rules" / "my_rules.yml").exists()
 
     def test_rejects_duplicate(self, tmp_path):
         source = tmp_path / "rules.yml"
         source.write_text("id: test\nseverity: high\npattern: 'x'\nmessage: 'y'\n")
 
         project = tmp_path / "project"
-        (project / ".vibecheck" / "rules").mkdir(parents=True)
-        (project / ".vibecheck" / "rules" / "rules.yml").write_text("existing")
+        (project / ".critik" / "rules").mkdir(parents=True)
+        (project / ".critik" / "rules" / "rules.yml").write_text("existing")
 
         result = install_rule_file(str(source), str(project))
         assert "already exists" in result

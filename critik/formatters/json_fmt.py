@@ -1,7 +1,7 @@
 """JSON output formatter."""
 
 import json
-from vibecheck.models import ScanResult
+from critik.models import ScanResult
 
 
 def format_json(result: ScanResult) -> str:

@@ -1,4 +1,4 @@
-"""VibeCheck CLI — security scanner for vibe-coded apps."""
+"""Critik CLI — security scanner for vibe-coded apps."""
 
 import argparse
 import sys
@@ -7,10 +7,10 @@ from pathlib import Path
 
 def cmd_scan(args):
     """Run security scan."""
-    from vibecheck.scanner import Scanner
-    from vibecheck.models import Severity
-    from vibecheck.formatters.terminal import format_terminal
-    from vibecheck.formatters.json_fmt import format_json
+    from critik.scanner import Scanner
+    from critik.models import Severity
+    from critik.formatters.terminal import format_terminal
+    from critik.formatters.json_fmt import format_json
 
     severity_map = {
         "critical": Severity.CRITICAL,
@@ -45,10 +45,10 @@ def cmd_scan(args):
     if args.format == "json":
         print(format_json(result))
     elif args.format == "sarif":
-        from vibecheck.formatters.sarif import format_sarif
+        from critik.formatters.sarif import format_sarif
         print(format_sarif(result))
     elif args.format == "fix":
-        from vibecheck.formatters.fix_prompts import format_fix_prompts
+        from critik.formatters.fix_prompts import format_fix_prompts
         print(format_fix_prompts(result, no_color=args.no_color))
     else:
         print(format_terminal(
@@ -66,7 +66,7 @@ def cmd_scan(args):
 
 def cmd_hook(args):
     """Install/uninstall pre-commit hook."""
-    from vibecheck.hooks import install_hook, uninstall_hook
+    from critik.hooks import install_hook, uninstall_hook
 
     if args.hook_action == "install":
         print(install_hook(args.path if hasattr(args, "path") else "."))
@@ -79,18 +79,18 @@ def cmd_rules(args):
     action = getattr(args, "rules_action", None)
 
     if action == "add":
-        from vibecheck.custom_rules import install_rule_file
+        from critik.custom_rules import install_rule_file
         print(install_rule_file(args.file, args.path if hasattr(args, "path") else "."))
         return
 
     if action == "test":
-        from vibecheck.custom_rules import validate_rule_file
+        from critik.custom_rules import validate_rule_file
         print(validate_rule_file(args.file))
         return
 
     # Default: list all checks
-    from vibecheck.scanner import Scanner  # triggers check registration
-    from vibecheck.checks import get_checks
+    from critik.scanner import Scanner  # triggers check registration
+    from critik.checks import get_checks
 
     checks = get_checks()
     print(f"\n  {len(checks)} built-in checks available:\n")
@@ -100,7 +100,7 @@ def cmd_rules(args):
         print(f"  {sev}  {c['name']:30s}  ({langs})")
 
     # Show custom rules if any
-    from vibecheck.custom_rules import load_custom_rules
+    from critik.custom_rules import load_custom_rules
     custom = load_custom_rules(Path(args.path if hasattr(args, "path") else ".").resolve())
     if custom:
         print(f"\n  {len(custom)} custom rules loaded:\n")
@@ -114,7 +114,7 @@ def cmd_rules(args):
 
 def cmd_watch(args):
     """Watch for changes and scan continuously."""
-    from vibecheck.watch import watch
+    from critik.watch import watch
     watch(
         path=args.path,
         min_severity=args.severity,
@@ -123,26 +123,26 @@ def cmd_watch(args):
 
 
 def cmd_init(args):
-    """Initialize VibeCheck for this project."""
-    from vibecheck.init import run_init
+    """Initialize Critik for this project."""
+    from critik.init import run_init
     print(run_init(args.path if hasattr(args, "path") else "."))
 
 
 def cmd_explain(args):
     """Explain a specific check."""
-    from vibecheck.explain import explain_check
+    from critik.explain import explain_check
     print(explain_check(args.check_name))
 
 
 def cmd_version(args):
     """Show version."""
-    from vibecheck import __version__
-    print(f"vibecheck {__version__}")
+    from critik import __version__
+    print(f"critik {__version__}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="vibecheck",
+        prog="critik",
         description="Security scanner for vibe-coded apps",
     )
 
@@ -160,11 +160,11 @@ def main():
     scan_parser.add_argument("--no-color", action="store_true", help="Disable colored output")
     scan_parser.add_argument("--quiet", action="store_true", help="Only show summary")
     scan_parser.add_argument("--ai", action="store_true",
-                             help="Enable AI-powered analysis (requires GROQ_API_KEY or VIBECHECK_API_KEY)")
+                             help="Enable AI-powered analysis (requires GROQ_API_KEY or CRITIK_API_KEY)")
     scan_parser.add_argument("--model", type=str, default=None,
                              help="LLM model override (default: llama-3.3-70b-versatile)")
     scan_parser.add_argument("--api-key", type=str, default=None,
-                             help="API key (or set VIBECHECK_API_KEY / GROQ_API_KEY env var)")
+                             help="API key (or set CRITIK_API_KEY / GROQ_API_KEY env var)")
     scan_parser.add_argument("--baseline", action="store_true",
                              help="Only show findings not in the saved baseline")
     scan_parser.add_argument("--save-baseline", action="store_true",
@@ -183,7 +183,7 @@ def main():
     watch_parser.add_argument("--ai", action="store_true", help="Enable AI analysis on changes")
 
     # init command
-    init_parser = subparsers.add_parser("init", help="Detect stack and generate .vibeignore")
+    init_parser = subparsers.add_parser("init", help="Detect stack and generate .critikignore")
     init_parser.add_argument("path", nargs="?", default=".", help="Project path (default: .)")
 
     # rules command

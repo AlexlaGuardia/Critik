@@ -1,7 +1,7 @@
-# .github/workflows/vibecheck.yml
+# .github/workflows/critik.yml
 # Add this to your repo to scan every push and PR
 
-name: VibeCheck Security Scan
+name: Critik Security Scan
 on:
   push:
     branches: [main]
@@ -9,7 +9,7 @@ on:
     branches: [main]
 
 jobs:
-  vibecheck:
+  critik:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,20 +18,20 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install VibeCheck
-        run: pip install vibecheck-ai
+      - name: Install Critik
+        run: pip install critik
 
       - name: Run security scan
-        run: vibecheck scan . --format terminal
+        run: critik scan . --format terminal
 
       # Optional: Upload SARIF for GitHub Code Scanning
       - name: Generate SARIF
         if: always()
-        run: vibecheck scan . --format sarif > vibecheck.sarif
+        run: critik scan . --format sarif > critik.sarif
 
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: vibecheck.sarif
-          category: vibecheck
+          sarif_file: critik.sarif
+          category: critik

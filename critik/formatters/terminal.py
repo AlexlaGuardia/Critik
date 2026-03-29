@@ -1,6 +1,6 @@
 """Colored terminal output formatter."""
 
-from vibecheck.models import ScanResult, Severity
+from critik.models import ScanResult, Severity
 
 # ANSI color codes
 COLORS = {
@@ -40,9 +40,9 @@ def format_terminal(result: ScanResult, no_color: bool = False, quiet: bool = Fa
         _raw = lambda s, code: f"{code}{s}{RESET}"  # noqa: E731
 
     if not quiet:
-        from vibecheck import __version__
+        from critik import __version__
         lines.append("")
-        header = f"  {_b('VibeCheck')} v{__version__} — scanned {result.files_scanned} files"
+        header = f"  {_b('Critik')} v{__version__} — scanned {result.files_scanned} files"
         if result.ai_enabled:
             header += f"  {_raw('[AI]', GREEN)}"
         lines.append(header)

@@ -29,16 +29,16 @@ interface VibecheckResult {
 }
 
 /**
- * Find the vibecheck executable.
+ * Find the critik executable.
  * Priority: user config > PATH lookup
  */
 function getExecutable(pythonPath: string): string {
   if (pythonPath) return pythonPath;
-  return "vibecheck";
+  return "critik";
 }
 
 /**
- * Run vibecheck on a single file and return findings.
+ * Run critik on a single file and return findings.
  */
 export async function scanFile(
   filePath: string,
@@ -53,7 +53,7 @@ export async function scanFile(
 }
 
 /**
- * Run vibecheck on a workspace directory.
+ * Run critik on a workspace directory.
  */
 export async function scanWorkspace(
   dirPath: string,
@@ -80,7 +80,7 @@ function runVibecheck(
       args,
       { timeout: 30000, maxBuffer: 10 * 1024 * 1024 },
       (error, stdout, stderr) => {
-        // vibecheck exits 1 when findings exist — that's expected
+        // critik exits 1 when findings exist — that's expected
         if (error && error.code !== 1) {
           // Real error (not installed, crashed, etc.)
           if (
@@ -90,7 +90,7 @@ function runVibecheck(
           ) {
             reject(
               new Error(
-                "vibecheck not found. Install with: pip install vibecheck-ai"
+                "critik not found. Install with: pip install critik"
               )
             );
             return;

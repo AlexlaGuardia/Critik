@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from vibecheck.ai import AIAnalyzer, SYSTEM_PROMPT, MAX_FILE_CHARS
-from vibecheck.models import Finding, Severity, ScanResult
+from critik.ai import AIAnalyzer, SYSTEM_PROMPT, MAX_FILE_CHARS
+from critik.models import Finding, Severity, ScanResult
 
 
 def _make_finding(check_name="secrets", severity="critical", file_path="/tmp/test.py",
@@ -34,8 +34,8 @@ class TestAIAnalyzerInit:
         a = AIAnalyzer(api_key="test-key-123")
         assert a.available
 
-    def test_env_vibecheck_key(self):
-        with patch.dict("os.environ", {"VIBECHECK_API_KEY": "vk-123"}):
+    def test_env_critik_key(self):
+        with patch.dict("os.environ", {"CRITIK_API_KEY": "vk-123"}):
             a = AIAnalyzer()
             assert a.available
             assert a.api_key == "vk-123"
@@ -43,7 +43,7 @@ class TestAIAnalyzerInit:
     def test_env_groq_key(self):
         with patch.dict("os.environ", {"GROQ_API_KEY": "gsk-123"}, clear=False):
             a = AIAnalyzer()
-            # Will pick up VIBECHECK_API_KEY or GROQ_API_KEY
+            # Will pick up CRITIK_API_KEY or GROQ_API_KEY
             assert a.available
 
     def test_default_model(self):
@@ -231,7 +231,7 @@ class TestAnalyzeIntegration:
         result = a.analyze(findings)
         assert result[0].ai_verdict is None
 
-    @patch("vibecheck.ai.AIAnalyzer._call_llm")
+    @patch("critik.ai.AIAnalyzer._call_llm")
     def test_full_analysis_flow(self, mock_llm, tmp_path):
         # Create a test file
         test_file = tmp_path / "app.py"
@@ -256,7 +256,7 @@ class TestAnalyzeIntegration:
         assert result[0].ai_confidence == 95
         mock_llm.assert_called_once()
 
-    @patch("vibecheck.ai.AIAnalyzer._call_llm")
+    @patch("critik.ai.AIAnalyzer._call_llm")
     def test_groups_findings_by_file(self, mock_llm, tmp_path):
         f1 = tmp_path / "a.py"
         f2 = tmp_path / "b.py"
@@ -276,7 +276,7 @@ class TestAnalyzeIntegration:
         # Should be called twice — once per file
         assert mock_llm.call_count == 2
 
-    @patch("vibecheck.ai.AIAnalyzer._call_llm")
+    @patch("critik.ai.AIAnalyzer._call_llm")
     def test_callback_called_per_file(self, mock_llm, tmp_path):
         f1 = tmp_path / "a.py"
         f1.write_text("code")
@@ -287,7 +287,7 @@ class TestAnalyzeIntegration:
         a.analyze([_make_finding(file_path=str(f1))], callback=callback)
         callback.assert_called_once()
 
-    @patch("vibecheck.ai.AIAnalyzer._call_llm")
+    @patch("critik.ai.AIAnalyzer._call_llm")
     def test_llm_failure_doesnt_crash(self, mock_llm, tmp_path):
         f = tmp_path / "a.py"
         f.write_text("code")

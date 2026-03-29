@@ -1,6 +1,6 @@
 """Custom YAML rules engine — community-contributed security patterns.
 
-Rule format (.vibecheck/rules/*.yml or .vibecheck/rules/*.yaml):
+Rule format (.critik/rules/*.yml or .critik/rules/*.yaml):
 
   id: supabase-rls-disabled
   severity: critical
@@ -18,8 +18,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from vibecheck.checks import check
-from vibecheck.models import Finding, Severity
+from critik.checks import check
+from critik.models import Finding, Severity
 
 # Try to import yaml — it's optional
 try:
@@ -28,7 +28,7 @@ try:
 except ImportError:
     HAS_YAML = False
 
-RULES_DIR = ".vibecheck/rules"
+RULES_DIR = ".critik/rules"
 
 # Cache for loaded custom rules
 _custom_rules: list[dict] = []
@@ -66,7 +66,7 @@ def _parse_rule(data: dict, source_file: str) -> Optional[dict]:
 
 
 def load_custom_rules(root: Path) -> list[dict]:
-    """Load custom rules from .vibecheck/rules/ directory."""
+    """Load custom rules from .critik/rules/ directory."""
     global _custom_rules, _rules_loaded
 
     if _rules_loaded:
@@ -182,7 +182,7 @@ def validate_rule_file(path: str) -> str:
 
 
 def install_rule_file(source: str, root: str = ".") -> str:
-    """Copy a rule file into .vibecheck/rules/."""
+    """Copy a rule file into .critik/rules/."""
     source_path = Path(source)
     if not source_path.exists():
         return f"Error: file not found: {source}"

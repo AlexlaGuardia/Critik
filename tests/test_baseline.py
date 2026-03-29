@@ -1,18 +1,18 @@
-"""Tests for vibecheck baseline — save and filter known findings."""
+"""Tests for critik baseline — save and filter known findings."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from vibecheck.baseline import (
+from critik.baseline import (
     finding_fingerprint,
     save_baseline,
     load_baseline,
     filter_baseline,
     BASELINE_FILE,
 )
-from vibecheck.models import Finding, Severity, ScanResult
+from critik.models import Finding, Severity, ScanResult
 
 
 def _make_finding(check_name="test-check", file_path="/app/test.py",

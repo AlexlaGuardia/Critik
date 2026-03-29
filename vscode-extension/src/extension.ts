@@ -6,30 +6,30 @@ let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext) {
-  outputChannel = vscode.window.createOutputChannel("VibeCheck");
-  diagnosticCollection = vscode.languages.createDiagnosticCollection("vibecheck");
+  outputChannel = vscode.window.createOutputChannel("Critik");
+  diagnosticCollection = vscode.languages.createDiagnosticCollection("critik");
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     100
   );
-  statusBarItem.command = "vibecheck.scanFile";
+  statusBarItem.command = "critik.scanFile";
   statusBarItem.show();
   updateStatusBar(0);
 
   // Commands
   context.subscriptions.push(
-    vscode.commands.registerCommand("vibecheck.scanFile", () => {
+    vscode.commands.registerCommand("critik.scanFile", () => {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
         runScanOnFile(editor.document);
       }
     }),
 
-    vscode.commands.registerCommand("vibecheck.scanWorkspace", () => {
+    vscode.commands.registerCommand("critik.scanWorkspace", () => {
       runScanOnWorkspace();
     }),
 
-    vscode.commands.registerCommand("vibecheck.clearDiagnostics", () => {
+    vscode.commands.registerCommand("critik.clearDiagnostics", () => {
       diagnosticCollection.clear();
       updateStatusBar(0);
     })
@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Scan on save
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((doc) => {
-      const config = vscode.workspace.getConfiguration("vibecheck");
+      const config = vscode.workspace.getConfiguration("critik");
       if (config.get<boolean>("enable") && config.get<boolean>("scanOnSave")) {
         runScanOnFile(doc);
       }
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Scan on open
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument((doc) => {
-      const config = vscode.workspace.getConfiguration("vibecheck");
+      const config = vscode.workspace.getConfiguration("critik");
       if (config.get<boolean>("enable") && config.get<boolean>("scanOnOpen")) {
         runScanOnFile(doc);
       }
@@ -95,12 +95,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(diagnosticCollection, statusBarItem, outputChannel);
 
-  outputChannel.appendLine("VibeCheck activated");
+  outputChannel.appendLine("Critik activated");
 
   // Scan currently open file on activation
   const editor = vscode.window.activeTextEditor;
   if (editor) {
-    const config = vscode.workspace.getConfiguration("vibecheck");
+    const config = vscode.workspace.getConfiguration("critik");
     if (config.get<boolean>("enable")) {
       runScanOnFile(editor.document);
     }
@@ -110,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
 async function runScanOnFile(document: vscode.TextDocument) {
   if (document.uri.scheme !== "file") return;
 
-  const config = vscode.workspace.getConfiguration("vibecheck");
+  const config = vscode.workspace.getConfiguration("critik");
   const severity = config.get<string>("severity", "medium");
   const pythonPath = config.get<string>("pythonPath", "");
 
@@ -134,11 +134,11 @@ async function runScanOnWorkspace() {
     return;
   }
 
-  const config = vscode.workspace.getConfiguration("vibecheck");
+  const config = vscode.workspace.getConfiguration("critik");
   const severity = config.get<string>("severity", "medium");
   const pythonPath = config.get<string>("pythonPath", "");
 
-  statusBarItem.text = "$(loading~spin) VibeCheck scanning...";
+  statusBarItem.text = "$(loading~spin) Critik scanning...";
 
   try {
     const findings = await scanWorkspace(
@@ -166,11 +166,11 @@ async function runScanOnWorkspace() {
 
     updateStatusBar(total);
     vscode.window.showInformationMessage(
-      `VibeCheck: ${total} findings across ${byFile.size} files`
+      `Critik: ${total} findings across ${byFile.size} files`
     );
   } catch (err: any) {
     outputChannel.appendLine(`Workspace scan error: ${err.message}`);
-    vscode.window.showErrorMessage(`VibeCheck: ${err.message}`);
+    vscode.window.showErrorMessage(`Critik: ${err.message}`);
   }
 }
 
@@ -181,7 +181,7 @@ function applyDiagnostics(uri: vscode.Uri, findings: VibecheckFinding[]) {
 
     const severity = mapSeverity(f.severity);
     const diag = new vscode.Diagnostic(range, f.message, severity);
-    diag.source = "vibecheck";
+    diag.source = "critik";
     diag.code = f.check;
 
     // Store fix hint in relatedInformation for hover/codeaction access
@@ -222,11 +222,11 @@ function mapSeverity(sev: string): vscode.DiagnosticSeverity {
 
 function updateStatusBar(count: number) {
   if (count === 0) {
-    statusBarItem.text = "$(shield) VibeCheck";
+    statusBarItem.text = "$(shield) Critik";
     statusBarItem.tooltip = "No security issues found";
     statusBarItem.backgroundColor = undefined;
   } else {
-    statusBarItem.text = `$(warning) VibeCheck: ${count}`;
+    statusBarItem.text = `$(warning) Critik: ${count}`;
     statusBarItem.tooltip = `${count} security issue${count === 1 ? "" : "s"} found`;
     statusBarItem.backgroundColor = new vscode.ThemeColor(
       "statusBarItem.warningBackground"
@@ -243,12 +243,12 @@ class VibecheckHoverProvider implements vscode.HoverProvider {
     const diagnostics = diagnosticCollection.get(document.uri) || [];
 
     for (const diag of diagnostics) {
-      if (diag.range.contains(position) && diag.source === "vibecheck") {
+      if (diag.range.contains(position) && diag.source === "critik") {
         const parts: vscode.MarkdownString[] = [];
 
         const md = new vscode.MarkdownString();
         md.isTrusted = true;
-        md.appendMarkdown(`**VibeCheck** \`${diag.code}\`\n\n`);
+        md.appendMarkdown(`**Critik** \`${diag.code}\`\n\n`);
         md.appendMarkdown(`${diag.message}\n\n`);
 
         if (diag.relatedInformation?.length) {
@@ -276,17 +276,17 @@ class VibecheckCodeActionProvider implements vscode.CodeActionProvider {
     const actions: vscode.CodeAction[] = [];
 
     for (const diag of context.diagnostics) {
-      if (diag.source !== "vibecheck") continue;
+      if (diag.source !== "critik") continue;
 
       // "Explain this check" action
       const explainAction = new vscode.CodeAction(
-        `VibeCheck: Explain "${diag.code}"`,
+        `Critik: Explain "${diag.code}"`,
         vscode.CodeActionKind.QuickFix
       );
       explainAction.command = {
         command: "workbench.action.terminal.sendSequence",
         title: "Explain check",
-        arguments: [{ text: `vibecheck explain ${diag.code}\n` }],
+        arguments: [{ text: `critik explain ${diag.code}\n` }],
       };
       explainAction.diagnostics = [diag];
       explainAction.isPreferred = false;
@@ -299,7 +299,7 @@ class VibecheckCodeActionProvider implements vscode.CodeActionProvider {
           ""
         );
         const copyAction = new vscode.CodeAction(
-          `VibeCheck: Copy fix to clipboard`,
+          `Critik: Copy fix to clipboard`,
           vscode.CodeActionKind.QuickFix
         );
         copyAction.command = {
@@ -308,7 +308,7 @@ class VibecheckCodeActionProvider implements vscode.CodeActionProvider {
         };
         // Actually, let's use a proper command to copy
         copyAction.command = {
-          command: "vibecheck.copyFix",
+          command: "critik.copyFix",
           title: "Copy fix hint",
           arguments: [fixText],
         };

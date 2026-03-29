@@ -1,7 +1,7 @@
 """Tests for framework-specific checks."""
 
 from pathlib import Path
-from vibecheck.checks.frameworks import (
+from critik.checks.frameworks import (
     check_supabase, check_firebase, check_nextjs, check_nextauth, check_prisma, check_stripe,
 )
 

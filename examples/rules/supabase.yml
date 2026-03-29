@@ -1,5 +1,5 @@
-# VibeCheck Custom Rule Pack: Supabase
-# Install: vibecheck rules add examples/rules/supabase.yml
+# Critik Custom Rule Pack: Supabase
+# Install: critik rules add examples/rules/supabase.yml
 
 ---
 id: supabase-no-rls-policy

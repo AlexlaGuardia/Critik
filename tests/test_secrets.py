@@ -1,7 +1,7 @@
 """Tests for secret detection."""
 
 from pathlib import Path
-from vibecheck.checks.secrets import check_secrets
+from critik.checks.secrets import check_secrets
 
 # Build test keys dynamically to avoid GitHub Push Protection
 # flagging these as real secrets in the repo

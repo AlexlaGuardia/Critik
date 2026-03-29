@@ -1,4 +1,4 @@
-"""Data models for VibeCheck findings."""
+"""Data models for Critik findings."""
 
 from dataclasses import dataclass, field
 from enum import Enum

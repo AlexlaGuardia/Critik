@@ -1,6 +1,6 @@
 """Check registry — all security checks register here via @check decorator."""
 
-from vibecheck.models import Severity
+from critik.models import Severity
 
 _checks: list[dict] = []
 

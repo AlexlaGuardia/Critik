@@ -52,8 +52,8 @@ def detect_language(path: Path) -> str:
 
 
 def load_ignores(root: Path) -> list[str]:
-    """Load .vibeignore patterns if present."""
-    ignore_file = root / ".vibeignore"
+    """Load .critikignore patterns if present."""
+    ignore_file = root / ".critikignore"
     patterns = []
     if ignore_file.exists():
         for line in ignore_file.read_text().split("\n"):

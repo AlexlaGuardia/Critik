@@ -3,17 +3,17 @@
 import time
 from pathlib import Path
 
-from vibecheck.models import ScanResult, Severity
-from vibecheck.ignores import detect_language, load_ignores, should_skip
+from critik.models import ScanResult, Severity
+from critik.ignores import detect_language, load_ignores, should_skip
 
 # Import check modules to trigger registration
-from vibecheck.checks import get_checks  # noqa: E402
-import vibecheck.checks.secrets  # noqa: F401
-import vibecheck.checks.injection  # noqa: F401
-import vibecheck.checks.auth  # noqa: F401
-import vibecheck.checks.config  # noqa: F401
-import vibecheck.checks.dotenv  # noqa: F401
-import vibecheck.checks.frameworks  # noqa: F401
+from critik.checks import get_checks  # noqa: E402
+import critik.checks.secrets  # noqa: F401
+import critik.checks.injection  # noqa: F401
+import critik.checks.auth  # noqa: F401
+import critik.checks.config  # noqa: F401
+import critik.checks.dotenv  # noqa: F401
+import critik.checks.frameworks  # noqa: F401
 
 
 class Scanner:
@@ -33,7 +33,7 @@ class Scanner:
         self.save_baseline = save_baseline
 
         # Load custom YAML rules
-        from vibecheck.custom_rules import load_custom_rules
+        from critik.custom_rules import load_custom_rules
         self._custom_rules = load_custom_rules(self.root) or None
 
     def scan(self) -> ScanResult:
@@ -60,18 +60,18 @@ class Scanner:
 
         # Save baseline if requested (before filtering)
         if self.save_baseline:
-            from vibecheck.baseline import save_baseline
+            from critik.baseline import save_baseline
             result.baseline_message = save_baseline(result, self.root)
 
         # Apply baseline filter
         if self.use_baseline:
-            from vibecheck.baseline import load_baseline, filter_baseline
+            from critik.baseline import load_baseline, filter_baseline
             baseline = load_baseline(self.root)
             if baseline is not None:
                 removed = filter_baseline(result, baseline)
                 result.baseline_filtered = removed
             else:
-                result.baseline_message = "  No baseline found. Run: vibecheck scan . --save-baseline"
+                result.baseline_message = "  No baseline found. Run: critik scan . --save-baseline"
 
         # Pass 2: AI analysis
         if self.ai and result.findings:
@@ -83,12 +83,12 @@ class Scanner:
     def _run_ai_analysis(self, result: ScanResult):
         """Run AI analysis on findings."""
         import sys
-        from vibecheck.ai import AIAnalyzer
+        from critik.ai import AIAnalyzer
 
         analyzer = AIAnalyzer(api_key=self.ai_key, model=self.ai_model)
         if not analyzer.available:
             print(
-                "  No API key found. Set VIBECHECK_API_KEY or GROQ_API_KEY to enable AI analysis.",
+                "  No API key found. Set CRITIK_API_KEY or GROQ_API_KEY to enable AI analysis.",
                 file=sys.stderr,
             )
             return
@@ -141,7 +141,7 @@ class Scanner:
 
         # Custom YAML rules
         if self._custom_rules is not None:
-            from vibecheck.custom_rules import scan_with_custom_rules
+            from critik.custom_rules import scan_with_custom_rules
             try:
                 findings = scan_with_custom_rules(file_path, content, language, self._custom_rules)
                 result.findings.extend(findings)

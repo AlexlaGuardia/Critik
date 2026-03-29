@@ -1,6 +1,6 @@
 """Check explanations — detailed writeups for each security check.
 
-vibecheck explain <check-name> shows:
+critik explain <check-name> shows:
 - What the check detects
 - Why it's dangerous
 - Real-world example (vulnerable code)

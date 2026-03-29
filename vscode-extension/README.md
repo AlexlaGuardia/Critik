@@ -1,4 +1,4 @@
-# VibeCheck for VS Code / Cursor
+# Critik for VS Code / Cursor
 
 AI-powered security scanner for vibe-coded apps. Catches what Copilot ships and Snyk overcharges for.
 
@@ -12,30 +12,30 @@ AI-powered security scanner for vibe-coded apps. Catches what Copilot ships and 
 
 ## Requirements
 
-Install the VibeCheck CLI:
+Install the Critik CLI:
 
 ```bash
-pip install vibecheck-ai
+pip install critik
 ```
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `vibecheck.enable` | `true` | Enable VibeCheck scanning |
-| `vibecheck.severity` | `medium` | Minimum severity to report |
-| `vibecheck.scanOnSave` | `true` | Scan files on save |
-| `vibecheck.scanOnOpen` | `false` | Scan files when opened |
-| `vibecheck.pythonPath` | `""` | Path to vibecheck executable |
+| `critik.enable` | `true` | Enable Critik scanning |
+| `critik.severity` | `medium` | Minimum severity to report |
+| `critik.scanOnSave` | `true` | Scan files on save |
+| `critik.scanOnOpen` | `false` | Scan files when opened |
+| `critik.pythonPath` | `""` | Path to critik executable |
 
 ## Commands
 
-- **VibeCheck: Scan Current File** — scan the active file
-- **VibeCheck: Scan Workspace** — scan the entire workspace
-- **VibeCheck: Clear Diagnostics** — clear all findings
+- **Critik: Scan Current File** — scan the active file
+- **Critik: Scan Workspace** — scan the entire workspace
+- **Critik: Clear Diagnostics** — clear all findings
 
 ## How It Works
 
-The extension runs `vibecheck scan <file> --format json` and converts findings to VS Code diagnostics. It requires the `vibecheck` CLI to be installed and on your PATH.
+The extension runs `critik scan <file> --format json` and converts findings to VS Code diagnostics. It requires the `critik` CLI to be installed and on your PATH.
 
-For AI-powered analysis, set `GROQ_API_KEY` or `VIBECHECK_API_KEY` in your environment and run `vibecheck scan . --ai` from the terminal.
+For AI-powered analysis, set `GROQ_API_KEY` or `CRITIK_API_KEY` in your environment and run `critik scan . --ai` from the terminal.

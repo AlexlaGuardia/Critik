@@ -2,9 +2,9 @@
 
 Every AI coding tool ships code fast. None of them check if it's safe.
 
-I built [VibeCheck](https://github.com/AlexlaGuardia/VibeCheck) — an open-source security scanner specifically for vibe-coded apps. It runs regex and AST analysis to find vulnerabilities, then sends each finding to an LLM that reviews it with full file context. The AI confirms real issues, dismisses false positives, and explains *why* in plain English.
+I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source security scanner specifically for vibe-coded apps. It runs regex and AST analysis to find vulnerabilities, then sends each finding to an LLM that reviews it with full file context. The AI confirms real issues, dismisses false positives, and explains *why* in plain English.
 
-`pip install vibecheck-ai` and you're scanning in 30 seconds.
+`pip install critik` and you're scanning in 30 seconds.
 
 ---
 
@@ -35,7 +35,7 @@ That last point is the key problem. Static scanners are noisy. They produce so m
 
 ## Two-Pass Architecture: Regex First, AI Second
 
-VibeCheck runs in two passes:
+Critik runs in two passes:
 
 **Pass 1 — Static Analysis (fast, offline, free)**
 
@@ -45,7 +45,7 @@ This pass runs in milliseconds, works offline, and requires no API key.
 
 **Pass 2 — AI Review (optional, context-aware)**
 
-When you add `--ai`, VibeCheck sends each finding to Groq's Llama 3.3 70B with the *full file content* as context. The LLM acts as a security analyst:
+When you add `--ai`, Critik sends each finding to Groq's Llama 3.3 70B with the *full file content* as context. The LLM acts as a security analyst:
 
 - **Verdict**: confirmed, false_positive, or needs_review
 - **Confidence**: 0-100%
@@ -60,9 +60,9 @@ The AI doesn't replace the scanner — it reviews the scanner's work. Like havin
 Here's a scan of a test project with intentional vulnerabilities:
 
 ```
-$ vibecheck scan . --ai
+$ critik scan . --ai
 
-  VibeCheck v0.4.0 — scanned 7 files  [AI]
+  Critik v0.4.0 — scanned 7 files  [AI]
 
   CRITICAL  nextjs-public-secret
   app/config.ts:18  Secret exposed to browser via NEXT_PUBLIC_ prefix
@@ -103,7 +103,7 @@ The trick is giving the LLM enough context to make good decisions. Each API call
 
 Findings are grouped by file, one API call per file. This keeps token usage low and gives the model maximum context.
 
-The model runs at temperature 0.2 (low creativity, high consistency) and returns structured JSON. If the API is rate-limited or down, VibeCheck falls back gracefully to regex-only results.
+The model runs at temperature 0.2 (low creativity, high consistency) and returns structured JSON. If the API is rate-limited or down, Critik falls back gracefully to regex-only results.
 
 ## What It Catches Today
 
@@ -121,13 +121,13 @@ The model runs at temperature 0.2 (low creativity, high consistency) and returns
 The CLI is free. The AI analysis is free (Groq's free tier). The GitHub Action is free. MIT license.
 
 ```bash
-pip install vibecheck-ai
-vibecheck scan .                # regex/AST only — offline, instant
-vibecheck scan . --ai           # + AI analysis (needs GROQ_API_KEY)
-vibecheck scan . --format fix   # copy-paste fix prompts for Cursor/Claude
+pip install critik
+critik scan .                # regex/AST only — offline, instant
+critik scan . --ai           # + AI analysis (needs GROQ_API_KEY)
+critik scan . --format fix   # copy-paste fix prompts for Cursor/Claude
 ```
 
-There's also a pre-commit hook (`vibecheck hook install`) that scans staged files before every commit, and SARIF output for CI/CD integration.
+There's also a pre-commit hook (`critik hook install`) that scans staged files before every commit, and SARIF output for CI/CD integration.
 
 ## Why I Built This
 
@@ -135,12 +135,12 @@ I do bug bounty hunting on HackerOne and 0din. The vulnerabilities I find in pro
 
 The irony: AI coding tools are simultaneously the biggest source of new vulnerabilities *and* the best tool for detecting them. A regex can find `eval()` — but only an LLM can tell you whether the eval is actually dangerous in context.
 
-VibeCheck is the scanner I wanted to exist. Now it does.
+Critik is the scanner I wanted to exist. Now it does.
 
 ---
 
-**GitHub**: [AlexlaGuardia/VibeCheck](https://github.com/AlexlaGuardia/VibeCheck)
-**PyPI**: `pip install vibecheck-ai`
+**GitHub**: [AlexlaGuardia/Critik](https://github.com/AlexlaGuardia/Critik)
+**PyPI**: `pip install critik`
 **License**: MIT
 
-If you're building with AI coding tools, run `vibecheck scan .` on your project. You might be surprised.
+If you're building with AI coding tools, run `critik scan .` on your project. You might be surprised.

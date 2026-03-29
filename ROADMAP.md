@@ -1,19 +1,19 @@
-# VibeCheck Roadmap
+# Critik Roadmap
 > The security scanner built for the vibe coding era.
 > Last updated: 2026-03-29
 
 ## Strategic Position
 
-VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+ developers using AI coding tools (Cursor, Claude Code, Copilot, Bolt, Lovable, Replit Agent). These tools ship code fast but skip security — 53% of teams found vulnerabilities that passed review.
+Critik is NOT another generic SAST tool. It's the security layer for the 26M+ developers using AI coding tools (Cursor, Claude Code, Copilot, Bolt, Lovable, Replit Agent). These tools ship code fast but skip security — 53% of teams found vulnerabilities that passed review.
 
 **Differentiation:** Free, fast, offline, AI-native. The anti-Snyk for indie devs.
 - Snyk: $25-98/dev/mo, cloud-dependent, enterprise-focused
 - Semgrep: re-licensed behind commercial terms, community backlash
 - ShipSecure: $8/mo, URL-only (not source code), web-based
 - VibeAppScanner: $5-29/mo, scans deployed apps (not CLI)
-- **VibeCheck: Free CLI, zero deps, offline, source code + config, MIT**
+- **Critik: Free CLI, zero deps, offline, source code + config, MIT**
 
-**Moat:** Detection rules compound. Community contributions create network effects. "vibecheck" becomes the verb developers use before pushing.
+**Moat:** Detection rules compound. Community contributions create network effects. "critik" becomes the verb developers use before pushing.
 
 **Revenue path:** Free CLI (distribution) → Pro features (revenue) → Team/Enterprise (scale).
 
@@ -26,8 +26,8 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 - [x] Python, JS/TS, .env, config file support
 - [x] Colored terminal + JSON + SARIF output
 - [x] GitHub Action (composite, configurable severity)
-- [x] .vibeignore support
-- [x] Published: PyPI (`pip install vibecheck-ai`) + GitHub (MIT)
+- [x] .critikignore support
+- [x] Published: PyPI (`pip install critik`) + GitHub (MIT)
 
 ---
 
@@ -35,11 +35,11 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 > Vibe-native release. Framework-specific rules + DX features.
 
 - [x] Framework checks: Supabase, Firebase, Next.js, NextAuth, Prisma, Stripe
-- [x] Fix prompts: `vibecheck scan . --format fix` (free — ShipSecure charges $8/mo)
-- [x] Pre-commit hook: `vibecheck hook install`
-- [x] `vibecheck init` — framework auto-detection + .vibeignore generation
-- [x] `vibecheck explain <check>` — detailed writeups for all 11 checks
-- [x] `vibecheck rules` — list all available checks
+- [x] Fix prompts: `critik scan . --format fix` (free — ShipSecure charges $8/mo)
+- [x] Pre-commit hook: `critik hook install`
+- [x] `critik init` — framework auto-detection + .critikignore generation
+- [x] `critik explain <check>` — detailed writeups for all 11 checks
+- [x] `critik rules` — list all available checks
 
 ---
 
@@ -52,7 +52,7 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 - [x] Natural language explanations + specific code fixes
 - [x] Severity adjustment based on context
 - [x] Rate limit retry with backoff, graceful degradation without API key
-- [x] `vibecheck scan . --ai` (+ --model, --api-key flags)
+- [x] `critik scan . --ai` (+ --model, --api-key flags)
 
 ### VS Code / Cursor Extension
 - [x] Diagnostics provider: inline red squiggles on vulnerable lines
@@ -63,20 +63,20 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 - [ ] Extension marketplace publishing (VS Code + Open VSX)
 
 ### Watch Mode
-- [x] `vibecheck watch .` — continuous file monitoring with debounce
+- [x] `critik watch .` — continuous file monitoring with debounce
 - [x] Inline terminal output with timestamps
 - [x] Supports --ai flag for live AI analysis
 
 ### Baseline Support
-- [x] `vibecheck scan --save-baseline` — save current findings
-- [x] `vibecheck scan --baseline` — only show new findings
+- [x] `critik scan --save-baseline` — save current findings
+- [x] `critik scan --baseline` — only show new findings
 - [x] Fingerprints use check + filename + snippet (stable across line changes)
 
 ### Custom YAML Rules
 - [x] Simple YAML format for community rules
-- [x] `.vibecheck/rules/*.yml` auto-loaded by scanner
-- [x] `vibecheck rules add <file>` — install rule packs
-- [x] `vibecheck rules test <file>` — validate rules
+- [x] `.critik/rules/*.yml` auto-loaded by scanner
+- [x] `critik rules add <file>` — install rule packs
+- [x] `critik rules test <file>` — validate rules
 - [x] Multi-document YAML, language filtering, regex patterns
 - [x] Example Supabase rule pack
 
@@ -102,18 +102,18 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 ### Marketplace Publishing
 - [ ] VS Code extension marketplace
 - [ ] Open VSX (Cursor, Windsurf)
-- [ ] npm wrapper: `npx vibecheck`
+- [ ] npm wrapper: `npx critik`
 
 ### Community Rules Registry
-- [ ] GitHub repo: vibecheck-rules (MIT, no CLA)
+- [ ] GitHub repo: critik-rules (MIT, no CLA)
 - [ ] Categories: frameworks, cloud providers, AI tools
-- [ ] `vibecheck rules install <pack-name>` from registry
+- [ ] `critik rules install <pack-name>` from registry
 - [ ] Featured packs: supabase, firebase, nextjs, fastapi, express
 
 ### Polish
 - [ ] Rule quality metrics (false positive rate tracking)
-- [ ] `vibecheck diff` — scan only git-changed files
-- [ ] Config file support (.vibecheck.yml for project-level settings)
+- [ ] `critik diff` — scan only git-changed files
+- [ ] Config file support (.critik.yml for project-level settings)
 
 ---
 
@@ -141,10 +141,10 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 ---
 
 ## v2.0.0 — "The Platform" (2027)
-> Goal: VibeCheck becomes the standard security layer for AI-generated code.
+> Goal: Critik becomes the standard security layer for AI-generated code.
 
 ### MCP Server Mode
-- [ ] Run VibeCheck as an MCP server — AI agents scan code before deploying
+- [ ] Run Critik as an MCP server — AI agents scan code before deploying
 - [ ] Tools: scan_file, scan_project, get_findings, explain_finding, suggest_fix
 - [ ] Integration with Vigil: MCP observability feeds into Vigil awareness
 
@@ -162,7 +162,7 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 
 ## Competitive Landscape (2026-03-29)
 
-| Tool | Price | Approach | VibeCheck Advantage |
+| Tool | Price | Approach | Critik Advantage |
 |------|-------|----------|-------------------|
 | Snyk | $25-98/mo | Cloud SCA + SAST | Free, offline, faster, no vendor lock-in |
 | Semgrep | Free-$40/mo | Rule-based SAST | Simpler rules, MIT license, no CLA |
@@ -172,7 +172,7 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 | Bandit | Free | Python-only AST | Multi-language, more rule types |
 | Aikido | Free/Paid | Platform + IDE | Lighter, no platform dependency |
 
-**VibeCheck's unique position:** The only free, offline, AI-native CLI scanner for vibe-coded apps with community rules, IDE extension, and context-aware false positive detection. Nobody else combines all of these at $0.
+**Critik's unique position:** The only free, offline, AI-native CLI scanner for vibe-coded apps with community rules, IDE extension, and context-aware false positive detection. Nobody else combines all of these at $0.
 
 ---
 
