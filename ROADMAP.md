@@ -1,10 +1,10 @@
 # Critik Roadmap
-> The security scanner built for the vibe coding era.
+> AI-powered code security scanner. The critic your code needs.
 > Last updated: 2026-03-29
 
 ## Strategic Position
 
-Critik is NOT another generic SAST tool. It's the security layer for the 26M+ developers using AI coding tools (Cursor, Claude Code, Copilot, Bolt, Lovable, Replit Agent). These tools ship code fast but skip security — 53% of teams found vulnerabilities that passed review.
+Critik is NOT another generic SAST tool. It's the security layer for the 26M+ developers using AI coding tools (Cursor, Claude Code, Copilot, Bolt, Lovable, Replit Agent). These tools ship code fast but skip security — 53% of teams found vulnerabilities that passed review. But it's not just for AI-generated code — any codebase benefits from a fast, free, AI-assisted security scan.
 
 **Differentiation:** Free, fast, offline, AI-native. The anti-Snyk for indie devs.
 - Snyk: $25-98/dev/mo, cloud-dependent, enterprise-focused
