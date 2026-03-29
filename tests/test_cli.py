@@ -32,7 +32,8 @@ def run_cli(*args) -> tuple[str, int]:
 
 def test_version():
     output, code = run_cli("version")
-    assert "vibecheck 0.2.0" in output
+    from vibecheck import __version__
+    assert f"vibecheck {__version__}" in output
     assert code == 0
 
 

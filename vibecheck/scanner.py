@@ -13,6 +13,7 @@ import vibecheck.checks.injection  # noqa: F401
 import vibecheck.checks.auth  # noqa: F401
 import vibecheck.checks.config  # noqa: F401
 import vibecheck.checks.dotenv  # noqa: F401
+import vibecheck.checks.frameworks  # noqa: F401
 
 
 class Scanner:

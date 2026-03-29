@@ -41,6 +41,9 @@ def cmd_scan(args):
     elif args.format == "sarif":
         from vibecheck.formatters.sarif import format_sarif
         print(format_sarif(result))
+    elif args.format == "fix":
+        from vibecheck.formatters.fix_prompts import format_fix_prompts
+        print(format_fix_prompts(result, no_color=args.no_color))
     else:
         print(format_terminal(
             result,
@@ -49,6 +52,30 @@ def cmd_scan(args):
         ))
 
     sys.exit(result.exit_code)
+
+
+def cmd_hook(args):
+    """Install/uninstall pre-commit hook."""
+    from vibecheck.hooks import install_hook, uninstall_hook
+
+    if args.hook_action == "install":
+        print(install_hook(args.path if hasattr(args, "path") else "."))
+    elif args.hook_action == "uninstall":
+        print(uninstall_hook(args.path if hasattr(args, "path") else "."))
+
+
+def cmd_rules(args):
+    """List available checks."""
+    from vibecheck.scanner import Scanner  # triggers check registration
+    from vibecheck.checks import get_checks
+
+    checks = get_checks()
+    print(f"\n  {len(checks)} checks available:\n")
+    for c in sorted(checks, key=lambda x: x["name"]):
+        sev = c["severity"].value.upper().ljust(8)
+        langs = ", ".join(c["languages"])
+        print(f"  {sev}  {c['name']:30s}  ({langs})")
+    print()
 
 
 def cmd_version(args):
@@ -68,7 +95,7 @@ def main():
     # scan command
     scan_parser = subparsers.add_parser("scan", help="Scan for security issues")
     scan_parser.add_argument("path", nargs="?", default=".", help="Path to scan (default: .)")
-    scan_parser.add_argument("--format", choices=["terminal", "json", "sarif"], default="terminal",
+    scan_parser.add_argument("--format", choices=["terminal", "json", "sarif", "fix"], default="terminal",
                              help="Output format (default: terminal)")
     scan_parser.add_argument("--severity", choices=["critical", "high", "medium", "low", "info"],
                              default="info", help="Minimum severity to report (default: info)")
@@ -76,6 +103,14 @@ def main():
                              help="Additional patterns to ignore (comma-separated)")
     scan_parser.add_argument("--no-color", action="store_true", help="Disable colored output")
     scan_parser.add_argument("--quiet", action="store_true", help="Only show summary")
+
+    # hook command
+    hook_parser = subparsers.add_parser("hook", help="Manage pre-commit hook")
+    hook_parser.add_argument("hook_action", choices=["install", "uninstall"], help="Install or uninstall")
+    hook_parser.add_argument("path", nargs="?", default=".", help="Repo path (default: .)")
+
+    # rules command
+    subparsers.add_parser("rules", help="List available checks")
 
     # version command
     subparsers.add_parser("version", help="Show version")
@@ -94,6 +129,8 @@ def main():
 
     commands = {
         "scan": cmd_scan,
+        "hook": cmd_hook,
+        "rules": cmd_rules,
         "version": cmd_version,
     }
 
