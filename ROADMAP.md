@@ -19,8 +19,8 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 
 ---
 
-## v0.2.0 — SHIPPED (2026-03-29)
-> 1,879 lines, 30 files, 31 tests
+## v0.2.0 — SHIPPED
+> Foundation release. 1,879 lines, 31 tests.
 
 - [x] 30+ detection rules: secrets (16), injection (6), auth (2), config (6), dotenv (3)
 - [x] Python, JS/TS, .env, config file support
@@ -28,120 +28,115 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 - [x] GitHub Action (composite, configurable severity)
 - [x] .vibeignore support
 - [x] Published: PyPI (`pip install vibecheck-ai`) + GitHub (MIT)
-- [x] Dogfooded on guardia-core (433 files, 233 findings, 5 criticals in .env)
 
 ---
 
-## v0.3.0 — "The Vibe-Native Release"
-> Goal: Own the "vibe coding security" category with patterns nobody else catches.
+## v0.3.0 — SHIPPED
+> Vibe-native release. Framework-specific rules + DX features.
 
-### Vibe-Coding-Specific Rules
-- [ ] Supabase: RLS disabled/public, anon key in client code, service_role key exposed
-- [ ] Firebase: open security rules (read/write: true), API key in client bundles
-- [ ] Vercel: env vars in client components (NEXT_PUBLIC_ misuse), open API routes
-- [ ] Netlify: exposed environment variables, open functions
-- [ ] Prisma: raw queries without parameterization
-- [ ] Drizzle: unsafe query construction patterns
-- [ ] NextAuth/Auth.js: missing CSRF protection, weak session config
-- [ ] Stripe: publishable key in server code, webhook secret in client
-
-### Fix Prompts (Free — ShipSecure charges $8/mo for this)
-- [ ] For each finding, generate a copy-paste prompt for Cursor/Claude/ChatGPT
-- [ ] `vibecheck scan . --fix-prompts` outputs findings with AI-ready fix instructions
-- [ ] Prompt includes: the vulnerability, the code context, the exact fix pattern
-- [ ] Give it away free — this is the distribution hook that makes devs tell each other
-
-### Pre-commit Hook
-- [ ] `vibecheck hook install` — adds to .pre-commit-config.yaml or .husky
-- [ ] Runs secrets + injection checks only (must be <2s)
-- [ ] `vibecheck hook run` for manual pre-commit execution
-- [ ] Skip with `--no-verify` (standard git behavior)
-
-### DX Polish
-- [ ] `vibecheck init` — generates .vibeignore with smart defaults for detected framework
-- [ ] `vibecheck rules` — list all available checks with descriptions
-- [ ] `vibecheck explain <check-name>` — detailed explanation + examples
-- [ ] Baseline file: `vibecheck scan --baseline` saves current findings, future scans only show new ones
-- [ ] `npx vibecheck` support (publish to npm as thin wrapper)
+- [x] Framework checks: Supabase, Firebase, Next.js, NextAuth, Prisma, Stripe
+- [x] Fix prompts: `vibecheck scan . --format fix` (free — ShipSecure charges $8/mo)
+- [x] Pre-commit hook: `vibecheck hook install`
+- [x] `vibecheck init` — framework auto-detection + .vibeignore generation
+- [x] `vibecheck explain <check>` — detailed writeups for all 11 checks
+- [x] `vibecheck rules` — list all available checks
 
 ---
 
-## v0.4.0 — "The IDE Release"
-> Goal: Meet developers where they code — Cursor, VS Code, Windsurf.
+## v0.4.0 — SHIPPED (2026-03-29)
+> AI analysis + IDE + community rules. Single-session build.
+
+### AI-Powered Analysis
+- [x] Two-pass scanning: regex/AST first, Groq/Llama 3.3 70B reviews findings with full file context
+- [x] Verdicts: confirmed / false_positive / needs_review with confidence scores
+- [x] Natural language explanations + specific code fixes
+- [x] Severity adjustment based on context
+- [x] Rate limit retry with backoff, graceful degradation without API key
+- [x] `vibecheck scan . --ai` (+ --model, --api-key flags)
 
 ### VS Code / Cursor Extension
-- [ ] Real-time scanning on file save
-- [ ] Inline diagnostics (red squiggles on vulnerable lines)
-- [ ] Hover cards with fix prompts
-- [ ] Quick-fix actions (apply the fix prompt directly)
-- [ ] Status bar: finding count + severity indicator
+- [x] Diagnostics provider: inline red squiggles on vulnerable lines
+- [x] Hover cards with fix hints
+- [x] Quick fix actions (explain check, copy fix)
+- [x] Status bar with finding count + severity indicator
+- [x] Scan on save, scan on open, workspace scan commands
 - [ ] Extension marketplace publishing (VS Code + Open VSX)
 
 ### Watch Mode
-- [ ] `vibecheck watch .` — continuous scanning, re-scan on file change
-- [ ] Desktop notifications on new critical/high findings
-- [ ] Pairs with IDE extension for terminal-first developers
+- [x] `vibecheck watch .` — continuous file monitoring with debounce
+- [x] Inline terminal output with timestamps
+- [x] Supports --ai flag for live AI analysis
 
-### Framework Auto-Detection
-- [ ] Detect project type from package.json / pyproject.toml / Cargo.toml
-- [ ] Auto-enable framework-specific rules (Next.js, FastAPI, Express, Django, Flask)
-- [ ] Skip irrelevant checks for the detected stack
+### Baseline Support
+- [x] `vibecheck scan --save-baseline` — save current findings
+- [x] `vibecheck scan --baseline` — only show new findings
+- [x] Fingerprints use check + filename + snippet (stable across line changes)
+
+### Custom YAML Rules
+- [x] Simple YAML format for community rules
+- [x] `.vibecheck/rules/*.yml` auto-loaded by scanner
+- [x] `vibecheck rules add <file>` — install rule packs
+- [x] `vibecheck rules test <file>` — validate rules
+- [x] Multi-document YAML, language filtering, regex patterns
+- [x] Example Supabase rule pack
+
+### Stats
+- 138 tests, ~4,400 lines, 6 commits
+- AI layer: 580 lines + 31 tests
+- Init/explain/baseline: 550 lines + 42 tests
+- VS Code extension: 447 lines TypeScript
+- Watch mode + YAML rules: 400 lines + 18 tests
 
 ---
 
-## v0.5.0 — "The Community Release"
-> Goal: Community-contributed rules become the moat.
+## v0.5.0 — "The Distribution Release" (NEXT)
+> Goal: Get users. Product is ahead of audience.
 
-### Custom Rules (YAML)
-- [ ] Simple YAML rule format (inspired by Semgrep but much simpler):
-  ```yaml
-  id: supabase-rls-disabled
-  severity: critical
-  languages: [typescript, javascript]
-  message: "Supabase table has RLS disabled"
-  pattern: ".from('$TABLE').select("
-  fix: "Enable RLS: ALTER TABLE $TABLE ENABLE ROW LEVEL SECURITY"
-  ```
-- [ ] `vibecheck rules add <path-to-yaml>` — add custom rules
-- [ ] `vibecheck rules test <path-to-yaml>` — validate custom rules against test cases
-- [ ] Rules directory: `.vibecheck/rules/*.yml` in project root
+### Launch Materials
+- [ ] Dev.to article: "I Built a Security Scanner That Uses AI to Review Its Own Findings"
+- [ ] HN "Show HN" post
+- [ ] Reddit: r/webdev, r/programming, r/netsec
+- [ ] Product Hunt launch
+- [ ] Demo video (15s scan → AI review → fix)
 
-### Community Rule Registry
-- [ ] GitHub repo: vibecheck-rules (community contributions)
-- [ ] No CLA — just MIT + PR. Lower friction than Semgrep.
-- [ ] Categories: frameworks, cloud providers, AI tools, general
-- [ ] `vibecheck rules install <pack-name>` — install community rule packs
+### Marketplace Publishing
+- [ ] VS Code extension marketplace
+- [ ] Open VSX (Cursor, Windsurf)
+- [ ] npm wrapper: `npx vibecheck`
+
+### Community Rules Registry
+- [ ] GitHub repo: vibecheck-rules (MIT, no CLA)
+- [ ] Categories: frameworks, cloud providers, AI tools
+- [ ] `vibecheck rules install <pack-name>` from registry
 - [ ] Featured packs: supabase, firebase, nextjs, fastapi, express
 
-### Rule Quality Metrics
-- [ ] Track false positive rate per rule (from user feedback)
-- [ ] Auto-disable rules with >20% false positive rate
-- [ ] Community voting on rule accuracy
+### Polish
+- [ ] Rule quality metrics (false positive rate tracking)
+- [ ] `vibecheck diff` — scan only git-changed files
+- [ ] Config file support (.vibecheck.yml for project-level settings)
 
 ---
 
 ## v1.0.0 — "The Pro Release"
-> Goal: Revenue. Free stays free. Pro adds team + AI features.
+> Goal: Revenue. Free stays free forever. Pro adds team + enterprise features.
 
-### Groq/LLM Integration (Pro)
-- [ ] Context-aware analysis: LLM reads surrounding code to reduce false positives
-- [ ] Natural language explanations: "This is dangerous because..." not just "SQL injection found"
-- [ ] Auto-fix generation: LLM writes the actual fix, not just a prompt
-- [ ] Confidence scoring: "87% likely a real vulnerability" vs "23% — probably safe"
-- [ ] Configurable: `VIBECHECK_API_KEY` for Groq, or bring your own LLM
-
-### Team Dashboard (Pro)
-- [ ] Web dashboard: project overview, finding trends, team activity
-- [ ] GitHub PR comments: bot posts findings inline on PRs
+### Pro Features ($9/mo)
+- [ ] LLM auto-fix: generate actual code patches, not just prompts
+- [ ] GitHub PR bot: post findings inline on pull requests
 - [ ] Slack/Discord notifications on new critical findings
-- [ ] Finding suppression: mark false positives, share across team
-- [ ] Compliance reports: exportable security posture summary
+- [ ] Web dashboard: project overview, finding trends
+- [ ] Stripe billing integration
 
-### Pricing
-- [ ] Free: CLI, all rules, SARIF, GitHub Action, fix prompts, pre-commit
-- [ ] Pro ($9/mo): LLM analysis, dashboard, PR bot, Slack alerts
-- [ ] Team ($29/mo): team management, shared suppressions, compliance reports
-- [ ] Enterprise ($99/mo): SSO, audit log, SLA, dedicated support
+### Team Features ($29/mo)
+- [ ] Team management + shared suppressions
+- [ ] Compliance reports (exportable security posture)
+- [ ] Finding suppression: mark false positives, share across team
+- [ ] Org-wide custom rule management
+
+### Enterprise ($99/mo)
+- [ ] SSO, audit log, SLA
+- [ ] Dedicated support
+- [ ] Self-hosted option
 
 ---
 
@@ -149,14 +144,9 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 > Goal: VibeCheck becomes the standard security layer for AI-generated code.
 
 ### MCP Server Mode
-- [ ] Run VibeCheck as an MCP server — AI agents can scan code before deploying
+- [ ] Run VibeCheck as an MCP server — AI agents scan code before deploying
 - [ ] Tools: scan_file, scan_project, get_findings, explain_finding, suggest_fix
 - [ ] Integration with Vigil: MCP observability feeds into Vigil awareness
-
-### Runtime Scanning
-- [ ] Scan deployed apps (like ShipSecure but free tier)
-- [ ] DAST basics: open ports, exposed admin panels, missing headers
-- [ ] Combine source + runtime findings for full picture
 
 ### Multi-Language Expansion
 - [ ] Go, Rust, Ruby, PHP, Java/Kotlin, Swift
@@ -178,46 +168,23 @@ VibeCheck is NOT another generic SAST tool. It's the security layer for the 26M+
 | Semgrep | Free-$40/mo | Rule-based SAST | Simpler rules, MIT license, no CLA |
 | ShipSecure | $8/mo | URL scanner + fix prompts | CLI source scanner, free fix prompts |
 | VibeAppScanner | $5-29/mo | Web-based deployed scan | CLI, offline, source code, free |
-| ChakraView | Free | Open source CLI | More rules, framework detection, community |
+| ChakraView | Free | Open source CLI | More rules, framework detection, AI layer |
 | Bandit | Free | Python-only AST | Multi-language, more rule types |
 | Aikido | Free/Paid | Platform + IDE | Lighter, no platform dependency |
-| Snyk agent-scan | Free | MCP/agent config scanner | Broader scope (source + config + .env) |
 
-**VibeCheck's unique position:** The only free, offline, multi-language CLI scanner specifically designed for vibe-coded apps, with AI-ready fix prompts and community rules. Nobody else combines all of these.
+**VibeCheck's unique position:** The only free, offline, AI-native CLI scanner for vibe-coded apps with community rules, IDE extension, and context-aware false positive detection. Nobody else combines all of these at $0.
 
 ---
 
-## Key Metrics to Track
+## Key Metrics
 
-| Metric | v0.2 (Now) | v0.3 Target | v1.0 Target |
+| Metric | v0.4 (Now) | v0.5 Target | v1.0 Target |
 |--------|-----------|-------------|-------------|
 | PyPI downloads/week | 0 | 200 | 2,000 |
 | GitHub stars | 0 | 100 | 1,000 |
-| Detection rules | 30+ | 60+ | 150+ |
-| Languages supported | 3 | 3 | 6 |
-| Community rule packs | 0 | 0 | 10 |
-| Tests | 31 | 60 | 150 |
+| Built-in checks | 11 | 11 | 20+ |
+| Custom rule packs | 1 | 5 | 20 |
+| Tests | 138 | 160 | 200 |
+| VS Code installs | 0 | 500 | 5,000 |
 | Pro subscribers | 0 | 0 | 100 |
 | MRR | $0 | $0 | $900 |
-
----
-
-## Distribution Plan (Launch Sequence)
-
-### Phase 1: Awareness (v0.3 launch)
-1. HN "Show HN: VibeCheck — security scanner for vibe-coded apps" (when HN account has karma)
-2. Dev.to: "I Built a Security Scanner That Catches What Copilot Ships"
-3. r/webdev, r/programming, r/netsec
-4. Product Hunt
-5. Twitter/X: demo videos (15s scan → findings → fix)
-
-### Phase 2: Adoption (v0.4-v0.5)
-6. VS Code / Cursor extension marketplace
-7. awesome-security-tools PRs
-8. Conference talks / blog posts about vibe coding security
-9. Community rule contributions drive organic growth
-
-### Phase 3: Revenue (v1.0)
-10. Pro tier launch with LLM features
-11. Team features for startups
-12. Enterprise outreach
