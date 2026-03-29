@@ -1,0 +1,96 @@
+{
+  "name": "vibecheck",
+  "displayName": "VibeCheck — Security Scanner",
+  "description": "AI-powered security scanner for vibe-coded apps. Catches what Copilot ships and Snyk overcharges for.",
+  "version": "0.4.0",
+  "publisher": "alexlaguardia",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlexlaGuardia/VibeCheck"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "security",
+    "scanner",
+    "vibe-coding",
+    "ai",
+    "copilot",
+    "cursor",
+    "linter"
+  ],
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:json",
+    "onLanguage:dotenv"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "VibeCheck",
+      "properties": {
+        "vibecheck.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable VibeCheck security scanning"
+        },
+        "vibecheck.severity": {
+          "type": "string",
+          "default": "medium",
+          "enum": ["critical", "high", "medium", "low", "info"],
+          "description": "Minimum severity to report"
+        },
+        "vibecheck.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan files on save"
+        },
+        "vibecheck.scanOnOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Scan files when opened"
+        },
+        "vibecheck.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to vibecheck executable (auto-detected if empty)"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "vibecheck.scanFile",
+        "title": "VibeCheck: Scan Current File"
+      },
+      {
+        "command": "vibecheck.scanWorkspace",
+        "title": "VibeCheck: Scan Workspace"
+      },
+      {
+        "command": "vibecheck.clearDiagnostics",
+        "title": "VibeCheck: Clear Diagnostics"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

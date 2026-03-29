@@ -1,0 +1,26 @@
+# VibeCheck Custom Rule Pack: Supabase
+# Install: vibecheck rules add examples/rules/supabase.yml
+
+---
+id: supabase-no-rls-policy
+severity: high
+languages: [javascript, typescript]
+message: 'Supabase query without RLS policy — verify RLS is enabled on this table'
+pattern: '\.from\(.+\)\.(select|insert|update|delete)\('
+fix: 'Run: ALTER TABLE your_table ENABLE ROW LEVEL SECURITY; then add appropriate policies'
+
+---
+id: supabase-storage-public
+severity: medium
+languages: [javascript, typescript]
+message: 'Supabase storage bucket may be publicly accessible'
+pattern: 'storage\.from\(.+\)\.(upload|getPublicUrl)\('
+fix: 'Verify bucket RLS policies. Use signed URLs for private content.'
+
+---
+id: supabase-auth-admin
+severity: critical
+languages: [javascript, typescript]
+message: 'Supabase admin auth API used — should only be called server-side'
+pattern: 'supabase\.auth\.admin\.'
+fix: 'Admin auth methods bypass RLS. Only use in server-side code (API routes, edge functions).'

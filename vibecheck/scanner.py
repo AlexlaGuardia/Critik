@@ -32,6 +32,10 @@ class Scanner:
         self.use_baseline = use_baseline
         self.save_baseline = save_baseline
 
+        # Load custom YAML rules
+        from vibecheck.custom_rules import load_custom_rules
+        self._custom_rules = load_custom_rules(self.root) or None
+
     def scan(self) -> ScanResult:
         result = ScanResult()
         start = time.monotonic()
@@ -134,6 +138,15 @@ class Scanner:
                 result.findings.extend(findings)
             except Exception:
                 pass  # Don't crash on individual check failures
+
+        # Custom YAML rules
+        if self._custom_rules is not None:
+            from vibecheck.custom_rules import scan_with_custom_rules
+            try:
+                findings = scan_with_custom_rules(file_path, content, language, self._custom_rules)
+                result.findings.extend(findings)
+            except Exception:
+                pass
 
     def _walk_files(self):
         """Walk directory tree, yielding scannable files."""

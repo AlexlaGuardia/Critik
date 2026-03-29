@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 
 def cmd_scan(args):
@@ -74,17 +75,51 @@ def cmd_hook(args):
 
 
 def cmd_rules(args):
-    """List available checks."""
+    """List available checks or manage custom rules."""
+    action = getattr(args, "rules_action", None)
+
+    if action == "add":
+        from vibecheck.custom_rules import install_rule_file
+        print(install_rule_file(args.file, args.path if hasattr(args, "path") else "."))
+        return
+
+    if action == "test":
+        from vibecheck.custom_rules import validate_rule_file
+        print(validate_rule_file(args.file))
+        return
+
+    # Default: list all checks
     from vibecheck.scanner import Scanner  # triggers check registration
     from vibecheck.checks import get_checks
 
     checks = get_checks()
-    print(f"\n  {len(checks)} checks available:\n")
+    print(f"\n  {len(checks)} built-in checks available:\n")
     for c in sorted(checks, key=lambda x: x["name"]):
         sev = c["severity"].value.upper().ljust(8)
         langs = ", ".join(c["languages"])
         print(f"  {sev}  {c['name']:30s}  ({langs})")
+
+    # Show custom rules if any
+    from vibecheck.custom_rules import load_custom_rules
+    custom = load_custom_rules(Path(args.path if hasattr(args, "path") else ".").resolve())
+    if custom:
+        print(f"\n  {len(custom)} custom rules loaded:\n")
+        for r in custom:
+            sev = r["severity"].value.upper().ljust(8)
+            langs = ", ".join(r["languages"])
+            print(f"  {sev}  {r['id']:30s}  ({langs})")
+
     print()
+
+
+def cmd_watch(args):
+    """Watch for changes and scan continuously."""
+    from vibecheck.watch import watch
+    watch(
+        path=args.path,
+        min_severity=args.severity,
+        ai=getattr(args, "ai", False),
+    )
 
 
 def cmd_init(args):
@@ -140,12 +175,25 @@ def main():
     hook_parser.add_argument("hook_action", choices=["install", "uninstall"], help="Install or uninstall")
     hook_parser.add_argument("path", nargs="?", default=".", help="Repo path (default: .)")
 
+    # watch command
+    watch_parser = subparsers.add_parser("watch", help="Watch for changes and scan continuously")
+    watch_parser.add_argument("path", nargs="?", default=".", help="Path to watch (default: .)")
+    watch_parser.add_argument("--severity", choices=["critical", "high", "medium", "low", "info"],
+                              default="medium", help="Minimum severity (default: medium)")
+    watch_parser.add_argument("--ai", action="store_true", help="Enable AI analysis on changes")
+
     # init command
     init_parser = subparsers.add_parser("init", help="Detect stack and generate .vibeignore")
     init_parser.add_argument("path", nargs="?", default=".", help="Project path (default: .)")
 
     # rules command
-    subparsers.add_parser("rules", help="List available checks")
+    rules_parser = subparsers.add_parser("rules", help="List checks or manage custom rules")
+    rules_parser.add_argument("--path", default=".", help="Project path (default: .)")
+    rules_sub = rules_parser.add_subparsers(dest="rules_action")
+    rules_add = rules_sub.add_parser("add", help="Install a custom rule file")
+    rules_add.add_argument("file", help="Path to YAML rule file")
+    rules_test = rules_sub.add_parser("test", help="Validate a YAML rule file")
+    rules_test.add_argument("file", help="Path to YAML rule file")
 
     # explain command
     explain_parser = subparsers.add_parser("explain", help="Explain a specific check")
@@ -173,6 +221,7 @@ def main():
 
     commands = {
         "scan": cmd_scan,
+        "watch": cmd_watch,
         "init": cmd_init,
         "hook": cmd_hook,
         "rules": cmd_rules,

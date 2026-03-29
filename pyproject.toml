@@ -26,7 +26,8 @@ vibecheck = "vibecheck.cli:main"
 
 [project.optional-dependencies]
 ai = ["groq>=1.0"]
-dev = ["pytest>=7.0", "groq>=1.0"]
+rules = ["pyyaml>=6.0"]
+dev = ["pytest>=7.0", "groq>=1.0", "pyyaml>=6.0"]
 
 [project.urls]
 Homepage = "https://github.com/AlexlaGuardia/vibe-check"
