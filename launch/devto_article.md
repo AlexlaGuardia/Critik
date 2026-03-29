@@ -2,7 +2,7 @@
 
 Every AI coding tool ships code fast. None of them check if it's safe.
 
-I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source security scanner specifically for vibe-coded apps. It runs regex and AST analysis to find vulnerabilities, then sends each finding to an LLM that reviews it with full file context. The AI confirms real issues, dismisses false positives, and explains *why* in plain English.
+I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source security scanner that uses AI to separate real vulnerabilities from noise. It runs regex and AST analysis to find issues, then sends each finding to an LLM that reviews it with full file context. The AI confirms real problems, dismisses false positives, and explains *why* in plain English.
 
 `pip install critik` and you're scanning in 30 seconds.
 
@@ -12,7 +12,7 @@ I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source sec
 
 53% of teams that shipped AI-generated code later discovered security issues that passed review. Georgia Tech's Vibe Security Radar tracked 74 CVEs directly from AI coding tools in Q1 2026 — 6 in January, 15 in February, 35 in March. The curve is accelerating.
 
-Here's what I kept seeing when I scanned vibe-coded projects:
+Here's what I kept seeing when I scanned projects built with AI coding tools:
 
 - **Hardcoded API keys** — Cursor generates a Supabase client and pastes the service_role key directly in the file
 - **SQL injection via f-strings** — Copilot autocompletes `db.execute(f"SELECT * FROM users WHERE id = {user_id}")` without hesitation
@@ -139,8 +139,9 @@ Critik is the scanner I wanted to exist. Now it does.
 
 ---
 
+**Website**: [critik.dev](https://critik.dev)
 **GitHub**: [AlexlaGuardia/Critik](https://github.com/AlexlaGuardia/Critik)
 **PyPI**: `pip install critik`
 **License**: MIT
 
-If you're building with AI coding tools, run `critik scan .` on your project. You might be surprised.
+Run `critik scan .` on your project. You might be surprised what's been hiding in plain sight.
