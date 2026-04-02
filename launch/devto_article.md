@@ -2,62 +2,55 @@
 
 Every AI coding tool ships code fast. None of them check if it's safe.
 
-I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source security scanner that uses AI to separate real vulnerabilities from noise. It runs regex and AST analysis to find issues, then sends each finding to an LLM that reviews it with full file context. The AI confirms real problems, dismisses false positives, and explains *why* in plain English.
+I built [Critik](https://github.com/AlexlaGuardia/Critik) — an open-source security scanner that catches what your AI writes and your review misses. Regex and AST find the candidates. An LLM reviews each one with full file context, confirms the real problems, kills the false positives, and explains why in plain English.
 
 `pip install critik` and you're scanning in 30 seconds.
 
 ---
 
-## The Problem Nobody's Talking About
+## The Numbers Are Ugly
 
-53% of teams that shipped AI-generated code later discovered security issues that passed review. Georgia Tech's Vibe Security Radar tracked 74 CVEs directly from AI coding tools in Q1 2026 — 6 in January, 15 in February, 35 in March. The curve is accelerating.
+53% of teams that shipped AI-generated code later found security issues that passed review. Georgia Tech's Vibe Security Radar tracked 74 CVEs from AI coding tools in Q1 2026 alone — 6 in January, 15 in February, 35 in March. Accelerating.
 
-Here's what I kept seeing when I scanned projects built with AI coding tools:
+Here's what I keep finding when I scan AI-built projects:
 
-- **Hardcoded API keys** — Cursor generates a Supabase client and pastes the service_role key directly in the file
-- **SQL injection via f-strings** — Copilot autocompletes `db.execute(f"SELECT * FROM users WHERE id = {user_id}")` without hesitation
-- **Firebase rules wide open** — Bolt scaffolds `read: true, write: true` and nobody changes it
-- **NEXT_PUBLIC_ prefix on secrets** — the env var that exposes your database URL to every browser
+- **Hardcoded API keys** — Cursor generates a Supabase client and pastes the service_role key right in the file
+- **SQL injection via f-strings** — Copilot autocompletes `db.execute(f"SELECT * FROM users WHERE id = {user_id}")` without blinking
+- **Firebase rules wide open** — Bolt scaffolds `read: true, write: true` and nobody touches it
+- **NEXT_PUBLIC_ prefix on secrets** — the env var that hands your database URL to every browser
 
-These aren't edge cases. These are the *default patterns* AI tools generate.
+Not edge cases. Default patterns.
 
-## Why Existing Tools Don't Work Here
+## The Tools That Exist Don't Fix This
 
-**Snyk** charges $25-98/dev/mo and is built for enterprises. Solo devs and small teams can't justify that.
+**Snyk** charges $25-98/dev/mo. Built for enterprises with procurement budgets.
 
-**Semgrep** is powerful but requires writing custom rules in a DSL. The learning curve is steep and they recently relicensed behind commercial terms.
+**Semgrep** is powerful. Also requires writing custom rules in a DSL. Steep curve. Recently relicensed behind commercial terms.
 
-**npm audit** is, according to Dan Abramov, "broken by design" — it reports devDependency issues that can't affect production.
+**npm audit** is, in Dan Abramov's words, "broken by design" — flags devDependency issues that can't touch production.
 
-**Bandit** (Python-only) and **ESLint security plugins** catch some patterns but have no context awareness. They flag `eval()` in a test fixture the same way they flag `eval(user_input)` in a request handler.
+**Bandit** and **ESLint security plugins** catch patterns but have zero context. They flag `eval()` in a test fixture the same way they flag `eval(user_input)` in a request handler.
 
-That last point is the key problem. Static scanners are noisy. They produce so many false positives that developers learn to ignore them — which means they also ignore the real ones.
+That last one is the real problem. Static scanners are noisy. Developers learn to ignore them. Which means they ignore the real findings too.
 
-## Two-Pass Architecture: Regex First, AI Second
+## Two Passes. One Scanner.
 
-Critik runs in two passes:
+**Pass 1 — Static (fast, offline, free)**
 
-**Pass 1 — Static Analysis (fast, offline, free)**
+Regex patterns and Python AST parsing. Hardcoded secrets (16 patterns — AWS, Stripe, OpenAI, Anthropic), SQL injection, command injection, eval/exec, XSS, framework misconfigs. Runs in milliseconds. No API key needed.
 
-Regex patterns and Python AST parsing catch the obvious stuff: hardcoded secrets (16 patterns including AWS, Stripe, OpenAI, Anthropic keys), SQL injection, command injection, eval/exec, XSS vectors, framework misconfigurations (Supabase, Firebase, Next.js, Prisma, Stripe).
+**Pass 2 — AI Review (optional, the whole point)**
 
-This pass runs in milliseconds, works offline, and requires no API key.
-
-**Pass 2 — AI Review (optional, context-aware)**
-
-When you add `--ai`, Critik sends each finding to Groq's Llama 3.3 70B with the *full file content* as context. The LLM acts as a security analyst:
+Add `--ai` and each finding goes to Groq's Llama 3.3 70B with the *full file* as context. The model acts as a security analyst:
 
 - **Verdict**: confirmed, false_positive, or needs_review
 - **Confidence**: 0-100%
-- **Explanation**: "This eval() parses trusted JSON config from a local file" vs "This eval() takes unsanitized user input from req.query"
-- **Specific fix**: actual code, not generic advice
-- **Severity adjustment**: upgrades or downgrades based on real risk
+- **Why**: "This eval() parses trusted JSON config from a local file" vs "This eval() takes unsanitized user input from req.query"
+- **Fix**: actual code, not generic advice
 
-The AI doesn't replace the scanner — it reviews the scanner's work. Like having a senior security engineer look over automated results.
+The AI doesn't replace the scanner. It reviews the scanner's work.
 
-## What This Actually Looks Like
-
-Here's a scan of a test project with intentional vulnerabilities:
+## What It Looks Like
 
 ```
 $ critik scan . --ai
@@ -88,60 +81,52 @@ $ critik scan . --ai
   AI analysis: 7 confirmed, 16 false positives
 ```
 
-Without AI: 23 findings, developer overwhelmed, ignores all of them.
-With AI: 7 real issues, 16 dismissed with explanations, developer fixes the 7.
+Without AI: 23 findings. Developer overwhelmed. Ignores all of them.
 
-That's the difference.
+With AI: 7 real issues. 16 dismissed with reasons. Developer fixes what matters.
 
-## How the AI Prompt Works
+## Under the Hood
 
-The trick is giving the LLM enough context to make good decisions. Each API call includes:
+Each API call sends the full file content (up to 8K chars) plus all findings for that file. One call per file — keeps tokens low, context high.
 
-1. **The full file content** (up to 8K chars) — so the model sees imports, function signatures, and data flow
-2. **All findings for that file** — batched together so the model understands the full picture
-3. **A system prompt** that teaches security analysis patterns — test fixtures are usually safe, .env files are expected to have secrets, NEXT_PUBLIC_ vars are intentionally client-exposed
+The model sees imports, function signatures, data flow. It knows test fixtures are probably safe, `.env` files are expected to have secrets, and `NEXT_PUBLIC_` vars are intentionally client-exposed.
 
-Findings are grouped by file, one API call per file. This keeps token usage low and gives the model maximum context.
+Temperature 0.2. Structured JSON back. If the API is down, Critik falls back to regex-only. No crash, no hang.
 
-The model runs at temperature 0.2 (low creativity, high consistency) and returns structured JSON. If the API is rate-limited or down, Critik falls back gracefully to regex-only results.
-
-## What It Catches Today
+## What It Catches
 
 | Category | Patterns | Examples |
 |----------|----------|----------|
 | Secrets | 16 | AWS, GitHub, OpenAI, Anthropic, Stripe, Slack, DB URLs, JWTs, private keys |
 | Injection | 6 | SQL via f-string/concat, eval(), exec(), os.system(), subprocess shell=True, XSS |
-| Frameworks | 8 | Supabase RLS, Firebase open rules, NEXT_PUBLIC_ secrets, NextAuth config, Prisma raw queries, Stripe webhook verification |
+| Frameworks | 8 | Supabase RLS, Firebase rules, NEXT_PUBLIC_ secrets, NextAuth, Prisma raw, Stripe webhooks |
 | Config | 6 | NODE_ENV in source, insecure cookies, open CORS, debug mode |
-| Auth | 2 | Missing auth on API routes, open endpoints |
-| Dotenv | 3 | Exposed .env files, sensitive vars without encryption |
+| Auth | 2 | Missing auth on routes, open endpoints |
+| Dotenv | 3 | Exposed .env, sensitive vars unencrypted |
 
-## It's Free
-
-The CLI is free. The AI analysis is free (Groq's free tier). The GitHub Action is free. MIT license.
+## Free. All of It.
 
 ```bash
 pip install critik
 critik scan .                # regex/AST only — offline, instant
-critik scan . --ai           # + AI analysis (needs GROQ_API_KEY)
+critik scan . --ai           # + AI review (needs GROQ_API_KEY)
 critik scan . --format fix   # copy-paste fix prompts for Cursor/Claude
 ```
 
-There's also a pre-commit hook (`critik hook install`) that scans staged files before every commit, and SARIF output for CI/CD integration.
+Pre-commit hook: `critik hook install`. SARIF output for CI/CD. GitHub Action included. MIT license.
 
 ## Why I Built This
 
-I do bug bounty hunting on HackerOne and 0din. The vulnerabilities I find in production apps are overwhelmingly the same patterns AI tools generate by default. Hardcoded keys, missing auth, SQL injection, open configs.
+I hunt bugs on HackerOne and 0din. The vulnerabilities I find in production are the same patterns AI tools ship by default. Hardcoded keys. Missing auth. SQL injection. Open configs.
 
-The irony: AI coding tools are simultaneously the biggest source of new vulnerabilities *and* the best tool for detecting them. A regex can find `eval()` — but only an LLM can tell you whether the eval is actually dangerous in context.
+The irony: AI coding tools are the biggest source of new vulnerabilities *and* the best tool for catching them. A regex finds `eval()`. Only an LLM can tell you if it's dangerous.
 
-Critik is the scanner I wanted to exist. Now it does.
+Critik is the scanner I wanted. Now it exists.
 
 ---
 
 **Website**: [critik.dev](https://critik.dev)
 **GitHub**: [AlexlaGuardia/Critik](https://github.com/AlexlaGuardia/Critik)
 **PyPI**: `pip install critik`
-**License**: MIT
 
-Run `critik scan .` on your project. You might be surprised what's been hiding in plain sight.
+Run `critik scan .` on your project. You might not like what you find.
