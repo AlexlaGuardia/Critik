@@ -135,6 +135,13 @@ _compiled = [(p, re.compile(p["pattern"])) for p in SECRET_PATTERNS]
 )
 def check_secrets(file_path: Path, content: str, language: str) -> list[Finding]:
     findings = []
+
+    # .env files are owned by the context-aware dotenv check, which knows a
+    # secret living in a gitignored .env is expected (HIGH), not a source-code
+    # leak (CRITICAL). Skip here to avoid double-counting and false criticals.
+    if language == "dotenv":
+        return findings
+
     lines = content.split("\n")
 
     for line_num, line in enumerate(lines, 1):
