@@ -12,11 +12,42 @@ SECRET_KEY_NAMES = re.compile(
     r"|.*(?:DATABASE_URL|REDIS_URL|MONGO_URI|AWS_SECRET|STRIPE_SECRET|OPENAI|ANTHROPIC))"
 )
 
-# Values that look like real secrets (not placeholders)
-PLACEHOLDER_PATTERNS = re.compile(
-    r"(?i)^(your[_\-]|change[_\-]?me|replace[_\-]?me|xxx|todo|fixme|placeholder|example|"
-    r"<.*>|\.\.\.|CHANGE_ME|YOUR_KEY_HERE|INSERT_HERE|FILL_IN|REPLACE_THIS|test|dummy|fake|sample)$"
+# Tokens that mark a value as a placeholder rather than a real secret.
+_PLACEHOLDER_TOKENS = re.compile(
+    r"(?i)(your[_\-]?|change[_\-]?me|replace[_\-]?me|placeholder|example|sample|insert|"
+    r"fill[_\-]?in|todo|fixme|dummy|fake|xxx+|here$|redacted|<[^>]*>|sk-xxx)"
 )
+
+# Connection-string keys carry credentials even though they end in url/uri — keep flagging.
+_CONNECTION_KEYS = re.compile(
+    r"(?i)(database|db|redis|mongo|mongodb|postgres|postgresql|amqp|rabbitmq|celery|"
+    r"broker|cache)_?(url|uri|dsn|connection)?$|_dsn$|connection_string$"
+)
+
+# Keys that match the secret-name heuristic by substring but are NOT secrets:
+# feature flags, URLs, public IDs, issuers, hosts, etc.
+_NON_SECRET_KEY = re.compile(
+    r"(?i)(^(enable|disable|use|is|has|allow|require)_|"
+    r"_(enabled|disabled|url|uri|endpoint|issuer|id|host|hostname|port|region|zone|"
+    r"name|provider|public|publishable|username|user|email|path|dir|mode|env|version|"
+    r"timeout|locale|lang|level|count|limit|ttl|expiry|expires|format|type|prefix|"
+    r"suffix|domain|origin|scope|audience|realm|bucket|table|schema|channel|topic|"
+    r"queue|model|debug|log|theme|color)$)"
+)
+
+
+def _is_placeholder(value: str) -> bool:
+    """True if a value is an obvious placeholder, not a real secret."""
+    v = value.strip().strip("'\"").strip()
+    if len(v) < 4:
+        return True
+    # Wrapped placeholders: [VALUE], <VALUE>, {{VALUE}}, ${VALUE}, __VALUE__
+    if (v[0] + v[-1]) in ("[]", "<>") \
+            or (v.startswith("{{") and v.endswith("}}")) \
+            or (v.startswith("${") and v.endswith("}")) \
+            or (v.startswith("__") and v.endswith("__")):
+        return True
+    return bool(_PLACEHOLDER_TOKENS.search(v))
 
 
 @check(
@@ -56,7 +87,8 @@ def check_dotenv(file_path: Path, content: str, language: str) -> list[Finding]:
                 fix_hint="Create a .gitignore and add '.env' to it",
             ))
 
-    is_example = file_path.name in (".env.example", ".env.sample", ".env.template")
+    name_l = file_path.name.lower()
+    is_example = any(t in name_l for t in (".example", ".sample", ".template", ".dist"))
 
     for line_num, line in enumerate(lines, 1):
         stripped = line.strip()
@@ -73,10 +105,15 @@ def check_dotenv(file_path: Path, content: str, language: str) -> list[Finding]:
         if not value or len(value) < 4:
             continue
 
-        if PLACEHOLDER_PATTERNS.match(value):
+        if _is_placeholder(value):
             continue
 
         if SECRET_KEY_NAMES.match(key):
+            # Feature flags, URLs, public IDs, issuers etc. match by substring but
+            # aren't secrets — unless the key is a credential-bearing connection string.
+            if not _CONNECTION_KEYS.search(key) and _NON_SECRET_KEY.search(key):
+                continue
+
             severity = Severity.MEDIUM if is_example else Severity.HIGH
             check_name = "env-example-real-secret" if is_example else "env-has-secret"
             msg = (

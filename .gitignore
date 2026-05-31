@@ -6,3 +6,6 @@ build/
 .pytest_cache/
 *.db
 .env
+
+# Responsible-disclosure working notes — never commit (names targets pre-fix)
+launch/disclosure-*.md

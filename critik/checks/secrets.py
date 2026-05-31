@@ -126,6 +126,15 @@ SECRET_PATTERNS = [
 
 _compiled = [(p, re.compile(p["pattern"])) for p in SECRET_PATTERNS]
 
+# Filename markers for test/fixture files (filename-based ONLY — never directory,
+# since real projects keep fixtures under tests/ and bare "test.py" is not a fixture).
+# A leaked prod key in a fixture is still worth seeing, so we demote (LOW) not drop.
+_TEST_FILE = re.compile(r"(?i)(\.test\.|\.spec\.|\.setup\.[mc]?[jt]sx?$|\.stories\.|^conftest\.py$)")
+
+# Connection strings pointing at loopback hosts are dev/test config, not leaked
+# production credentials — skip them entirely.
+_LOCALHOST_DB = re.compile(r"(?i)@(localhost|127\.0\.0\.1|0\.0\.0\.0|\[?::1\]?)[:/]")
+
 
 @check(
     name="secrets",
@@ -143,6 +152,7 @@ def check_secrets(file_path: Path, content: str, language: str) -> list[Finding]
         return findings
 
     lines = content.split("\n")
+    is_test = bool(_TEST_FILE.search(file_path.name))
 
     for line_num, line in enumerate(lines, 1):
         # Skip comments
@@ -153,9 +163,19 @@ def check_secrets(file_path: Path, content: str, language: str) -> list[Finding]
         for pattern_def, compiled in _compiled:
             match = compiled.search(line)
             if match:
+                # Loopback connection strings are dev config, not leaked creds.
+                if pattern_def["name"] == "database-url" and _LOCALHOST_DB.search(match.group()):
+                    continue
+
+                severity = Severity(pattern_def["severity"])
+                # Secrets in test/fixture files are usually dummy values — keep
+                # them visible but out of the critical/high noise tier.
+                if is_test:
+                    severity = Severity.LOW
+
                 findings.append(Finding(
                     check_name=pattern_def["name"],
-                    severity=Severity(pattern_def["severity"]),
+                    severity=severity,
                     file_path=str(file_path),
                     line=line_num,
                     column=match.start(),
