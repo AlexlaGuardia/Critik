@@ -1,0 +1,122 @@
+{
+  "summary": {
+    "recall": 1.0,
+    "fp_rate": 0.0,
+    "precision": 1.0,
+    "f1": 1.0,
+    "detected": 7,
+    "n_vulnerable": 7,
+    "fp_files": 0,
+    "n_clean": 8,
+    "noise_floor": "medium"
+  },
+  "vulnerable": [
+    {
+      "file": "bad_secrets.py",
+      "category": "secrets",
+      "need": "critical",
+      "findings": 5,
+      "detected": true
+    },
+    {
+      "file": ".env.production",
+      "category": "secrets",
+      "need": "high",
+      "findings": 4,
+      "detected": true
+    },
+    {
+      "file": "bad_injection.py",
+      "category": "injection",
+      "need": "high",
+      "findings": 5,
+      "detected": true
+    },
+    {
+      "file": "bad_config.js",
+      "category": "config",
+      "need": "high",
+      "findings": 5,
+      "detected": true
+    },
+    {
+      "file": "bad_firebase_rules.json",
+      "category": "frameworks",
+      "need": "critical",
+      "findings": 4,
+      "detected": true
+    },
+    {
+      "file": "bad_nextjs_api.ts",
+      "category": "frameworks",
+      "need": "critical",
+      "findings": 2,
+      "detected": true
+    },
+    {
+      "file": "bad_supabase.ts",
+      "category": "frameworks",
+      "need": "high",
+      "findings": 1,
+      "detected": true
+    }
+  ],
+  "clean": [
+    {
+      "file": "clean_secrets.py",
+      "category": "secrets",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": ".env.example",
+      "category": "secrets",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_injection.py",
+      "category": "injection",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_config.js",
+      "category": "config",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_firebase_rules.json",
+      "category": "frameworks",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_nextjs_api.ts",
+      "category": "frameworks",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_supabase.ts",
+      "category": "frameworks",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_utils.py",
+      "category": "none",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    }
+  ]
+}

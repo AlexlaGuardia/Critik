@@ -18,6 +18,16 @@ _PLACEHOLDER_TOKENS = re.compile(
     r"fill[_\-]?in|todo|fixme|dummy|fake|xxx+|here$|redacted|<[^>]*>|sk-xxx)"
 )
 
+# Connection strings that are obviously templates, not leaked creds: loopback/example
+# hosts, or literal generic-word credentials (postgres://USER:PASSWORD@..). A real leak
+# has a non-loopback host AND non-generic credentials, so these never match it.
+_PLACEHOLDER_URL = re.compile(
+    r"(?i)://[^/@\s]*:[^/@\s]*@("
+    r"localhost|127\.0\.0\.1|0\.0\.0\.0|\[?::1\]?|host(name)?\b|example\.com|"
+    r"your[_\-]?host|db[_\-]?host)"
+    r"|://(user(name)?|pass(word)?):(pass(word)?|secret|changeme|x{3,})@"
+)
+
 # Connection-string keys carry credentials even though they end in url/uri — keep flagging.
 _CONNECTION_KEYS = re.compile(
     r"(?i)(database|db|redis|mongo|mongodb|postgres|postgresql|amqp|rabbitmq|celery|"
@@ -46,6 +56,8 @@ def _is_placeholder(value: str) -> bool:
             or (v.startswith("{{") and v.endswith("}}")) \
             or (v.startswith("${") and v.endswith("}")) \
             or (v.startswith("__") and v.endswith("__")):
+        return True
+    if _PLACEHOLDER_URL.search(v):
         return True
     return bool(_PLACEHOLDER_TOKENS.search(v))
 
