@@ -13,6 +13,47 @@ AUTH_INDICATORS = {"Depends", "Security", "login_required", "auth_required",
                    "permission_required", "jwt_required", "authenticated",
                    "current_user", "get_current_user", "verify_token"}
 
+# Route-name stems that are public by definition — flagging "login has no auth"
+# is noise. Matched as the whole name or a `stem_...` prefix, so register_user,
+# health_check, reset_password, login_access_token all qualify.
+PUBLIC_ROUTE_STEMS = (
+    "login", "logout", "signin", "sign_in", "signup", "sign_up", "register",
+    "token", "refresh", "recover", "reset", "forgot", "health", "healthz",
+    "ping", "webhook", "root", "index", "docs", "openapi",
+)
+
+
+def _is_public_route(name: str) -> bool:
+    name = name.lower()
+    return any(name == s or name.startswith(s + "_") for s in PUBLIC_ROUTE_STEMS)
+
+
+def _node_names(node: ast.AST):
+    """Yield every Name.id / Attribute.attr in a subtree (for annotation scans)."""
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Name):
+            yield sub.id
+        elif isinstance(sub, ast.Attribute):
+            yield sub.attr
+
+
+def _param_has_auth(func_node: ast.AST) -> bool:
+    """True if any parameter carries auth via name or annotation.
+
+    Catches the modern FastAPI annotation pattern
+    ``current_user: CurrentUser`` / ``user: Annotated[User, Depends(...)]``,
+    which lives in the annotation rather than a default value.
+    """
+    args = func_node.args
+    for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs):
+        if arg.arg in AUTH_INDICATORS:
+            return True
+        if arg.annotation is not None and any(
+            n in AUTH_INDICATORS for n in _node_names(arg.annotation)
+        ):
+            return True
+    return False
+
 
 def _check_python_auth(file_path: Path, content: str) -> list[Finding]:
     """AST-based auth detection for Python (FastAPI, Flask, Django)."""
@@ -53,9 +94,18 @@ def _check_python_auth(file_path: Path, content: str) -> list[Finding]:
         if not is_route:
             continue
 
-        # Check if function has auth in its parameters (FastAPI Depends pattern)
-        has_auth = False
+        # Public-by-definition endpoints (login, password reset, health…) don't
+        # need auth — flagging them is noise, not signal.
+        if _is_public_route(node.name):
+            continue
+
+        # Check if function has auth in its parameters. Two patterns:
+        #  - default value: def f(user=Depends(get_current_user))
+        #  - annotation:    def f(current_user: CurrentUser)   (modern FastAPI)
+        has_auth = _param_has_auth(node)
         for default in node.args.defaults:
+            if has_auth:
+                break
             if isinstance(default, ast.Call):
                 func_name = None
                 if isinstance(default.func, ast.Name):

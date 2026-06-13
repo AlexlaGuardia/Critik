@@ -39,6 +39,33 @@ exec(user_code)
     assert any(f.check_name == "exec-usage" for f in findings)
 
 
+def test_method_exec_not_flagged():
+    # session.exec() is SQLModel's query API, not builtin exec().
+    code = '''
+def read(session, statement):
+    return session.exec(statement).first()
+'''
+    findings = check_injection(Path("test.py"), code, "python")
+    assert not any(f.check_name == "exec-usage" for f in findings)
+
+
+def test_method_eval_not_flagged():
+    # model.eval() / df.eval() are method calls, not builtin eval().
+    code = '''
+def run(model, df):
+    model.eval()
+    return df.eval("a + b")
+'''
+    findings = check_injection(Path("test.py"), code, "python")
+    assert not any(f.check_name == "eval-usage" for f in findings)
+
+
+def test_js_method_eval_not_flagged():
+    code = "const r = parser.eval(expr);"
+    findings = check_injection(Path("app.js"), code, "javascript")
+    assert not any(f.check_name == "js-eval" for f in findings)
+
+
 def test_subprocess_shell():
     code = '''
 import subprocess

@@ -27,7 +27,10 @@ def _check_python_injection(file_path: Path, content: str) -> list[Finding]:
             elif isinstance(node.func, ast.Attribute):
                 func_name = node.func.attr
 
-            if func_name in ("eval", "exec"):
+            # Builtin eval()/exec() are only dangerous as bare-name calls.
+            # A method call (session.exec(), model.eval(), df.eval()) is an
+            # ast.Attribute and is something else entirely — never flag it.
+            if func_name in ("eval", "exec") and isinstance(node.func, ast.Name):
                 findings.append(Finding(
                     check_name=f"{func_name}-usage",
                     severity=Severity.HIGH,
@@ -99,7 +102,9 @@ def _check_python_injection(file_path: Path, content: str) -> list[Finding]:
     return findings
 
 
-_JS_EVAL_RE = re.compile(r"\beval\s*\(")
+# Bare eval( only — not a method call like foo.eval() (the leading char must
+# not be a dot or word char).
+_JS_EVAL_RE = re.compile(r"(?<![.\w])eval\s*\(")
 _JS_INNERHTML_RE = re.compile(r"dangerouslySetInnerHTML")
 _JS_DOC_WRITE_RE = re.compile(r"document\.write\s*\(")
 

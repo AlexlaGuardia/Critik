@@ -17,7 +17,7 @@ SECRET_KEY_NAMES = re.compile(
 # key is alphanumeric and never contains three consecutive dots, so this is a
 # zero-false-negative signal.
 _PLACEHOLDER_TOKENS = re.compile(
-    r"(?i)(your[_\-]?|change[_\-]?me|replace[_\-]?me|placeholder|example|sample|insert|"
+    r"(?i)(your[_\-]?|change[_\-]?(me|this|it)|replace[_\-]?me|placeholder|example|sample|insert|"
     r"fill[_\-]?in|todo|fixme|dummy|fake|xxx+|here$|redacted|<[^>]*>|sk-xxx|\.{3,})"
 )
 
