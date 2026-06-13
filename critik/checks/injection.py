@@ -107,6 +107,13 @@ def _check_python_injection(file_path: Path, content: str) -> list[Finding]:
 _JS_EVAL_RE = re.compile(r"(?<![.\w])eval\s*\(")
 _JS_INNERHTML_RE = re.compile(r"dangerouslySetInnerHTML")
 _JS_DOC_WRITE_RE = re.compile(r"document\.write\s*\(")
+# MongoDB $where runs the string as server-side JS. Only dangerous when the
+# value is built from input — template interpolation (${...}) or string concat —
+# so a static $where string never trips this.
+_JS_NOSQL_WHERE_RE = re.compile(r"\$where\b")
+_JS_DYNAMIC_VALUE_RE = re.compile(r"\$\{|['\"]\s*\+|\+\s*['\"]")
+# Open redirect: res.redirect() with a request value inside the argument.
+_JS_OPEN_REDIRECT_RE = re.compile(r"\bres\.redirect\s*\(\s*[^)]*\breq\.")
 
 
 def _check_js_injection(file_path: Path, content: str) -> list[Finding]:
@@ -123,6 +130,9 @@ def _check_js_injection(file_path: Path, content: str) -> list[Finding]:
         (_JS_DOC_WRITE_RE, "document-write", Severity.MEDIUM,
          "document.write() can be exploited for XSS",
          "Use DOM manipulation methods instead (createElement, textContent)"),
+        (_JS_OPEN_REDIRECT_RE, "open-redirect", Severity.MEDIUM,
+         "Redirect target comes from the request — open redirect risk",
+         "Validate the target against an allowlist, or use a relative path"),
     ]
 
     for line_num, line in enumerate(lines, 1):
@@ -143,6 +153,19 @@ def _check_js_injection(file_path: Path, content: str) -> list[Finding]:
                     snippet=line.rstrip(),
                     fix_hint=fix,
                 ))
+
+        # NoSQL injection: a $where whose value is built from input.
+        if _JS_NOSQL_WHERE_RE.search(line) and _JS_DYNAMIC_VALUE_RE.search(line):
+            findings.append(Finding(
+                check_name="nosql-injection",
+                severity=Severity.HIGH,
+                file_path=str(file_path),
+                line=line_num,
+                column=line.find("$where"),
+                message="NoSQL injection: MongoDB $where built from interpolated input",
+                snippet=line.rstrip(),
+                fix_hint="Never put input in $where (it runs as JS). Use typed query operators instead.",
+            ))
 
     return findings
 

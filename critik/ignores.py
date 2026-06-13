@@ -7,7 +7,7 @@ DEFAULT_SKIP_DIRS = {
     ".git", "node_modules", "__pycache__", "venv", ".venv", "env",
     "dist", "build", ".next", ".tox", ".mypy_cache", ".pytest_cache",
     ".eggs", "*.egg-info", ".nuxt", ".output", "coverage",
-    ".terraform", ".serverless",
+    ".terraform", ".serverless", "vendor", "bower_components",
 }
 
 DEFAULT_SKIP_FILES = {

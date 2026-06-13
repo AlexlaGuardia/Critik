@@ -66,6 +66,37 @@ def test_js_method_eval_not_flagged():
     assert not any(f.check_name == "js-eval" for f in findings)
 
 
+def test_nosql_where_interpolated_flags():
+    code = "return {$where: `this.userId == ${parsedUserId} && this.stocks > ${t}`};"
+    findings = check_injection(Path("dao.js"), code, "javascript")
+    assert any(f.check_name == "nosql-injection" for f in findings)
+
+
+def test_nosql_where_concat_flags():
+    code = 'col.find({$where: "this.name == " + userName});'
+    findings = check_injection(Path("dao.js"), code, "javascript")
+    assert any(f.check_name == "nosql-injection" for f in findings)
+
+
+def test_nosql_static_where_not_flagged():
+    # A constant $where string is not injection — must not false-positive.
+    code = 'col.find({$where: "this.active == true"});'
+    findings = check_injection(Path("dao.js"), code, "javascript")
+    assert not any(f.check_name == "nosql-injection" for f in findings)
+
+
+def test_open_redirect_flags():
+    code = "res.redirect(req.query.returnTo);"
+    findings = check_injection(Path("routes.js"), code, "javascript")
+    assert any(f.check_name == "open-redirect" for f in findings)
+
+
+def test_static_redirect_not_flagged():
+    code = "res.redirect('/login');"
+    findings = check_injection(Path("routes.js"), code, "javascript")
+    assert not any(f.check_name == "open-redirect" for f in findings)
+
+
 def test_subprocess_shell():
     code = '''
 import subprocess
