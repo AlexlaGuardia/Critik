@@ -13,9 +13,12 @@ SECRET_KEY_NAMES = re.compile(
 )
 
 # Tokens that mark a value as a placeholder rather than a real secret.
+# `\.{3,}` catches truncation stubs like `sk-...`, `gsk_...`, `AI...` — a real
+# key is alphanumeric and never contains three consecutive dots, so this is a
+# zero-false-negative signal.
 _PLACEHOLDER_TOKENS = re.compile(
     r"(?i)(your[_\-]?|change[_\-]?me|replace[_\-]?me|placeholder|example|sample|insert|"
-    r"fill[_\-]?in|todo|fixme|dummy|fake|xxx+|here$|redacted|<[^>]*>|sk-xxx)"
+    r"fill[_\-]?in|todo|fixme|dummy|fake|xxx+|here$|redacted|<[^>]*>|sk-xxx|\.{3,})"
 )
 
 # Connection strings that are obviously templates, not leaked creds: loopback/example
@@ -44,6 +47,25 @@ _NON_SECRET_KEY = re.compile(
     r"suffix|domain|origin|scope|audience|realm|bucket|table|schema|channel|topic|"
     r"queue|model|debug|log|theme|color)$)"
 )
+
+
+def _clean_env_value(raw: str) -> str:
+    """Extract the literal value from the RHS of a dotenv assignment.
+
+    Strips an unquoted inline ``# comment`` (python-dotenv treats a hash that
+    follows whitespace as the start of a comment) and surrounding quotes.
+    Quoted values are returned verbatim so a ``#`` *inside* quotes survives.
+    """
+    v = raw.strip()
+    if v[:1] in ("'", '"'):
+        quote = v[0]
+        end = v.find(quote, 1)
+        return v[1:end] if end != -1 else v[1:]
+    # Unquoted: a hash preceded by whitespace starts an inline comment.
+    m = re.search(r"\s#", v)
+    if m:
+        v = v[: m.start()].strip()
+    return v
 
 
 def _is_placeholder(value: str) -> bool:
@@ -112,7 +134,7 @@ def check_dotenv(file_path: Path, content: str, language: str) -> list[Finding]:
 
         key, _, value = stripped.partition("=")
         key = key.strip()
-        value = value.strip().strip("'\"")
+        value = _clean_env_value(value)
 
         if not value or len(value) < 4:
             continue
