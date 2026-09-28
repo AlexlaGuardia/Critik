@@ -4,10 +4,10 @@
     "fp_rate": 0.0,
     "precision": 1.0,
     "f1": 1.0,
-    "detected": 7,
-    "n_vulnerable": 7,
+    "detected": 8,
+    "n_vulnerable": 8,
     "fp_files": 0,
-    "n_clean": 8,
+    "n_clean": 9,
     "noise_floor": "medium"
   },
   "vulnerable": [
@@ -30,6 +30,13 @@
       "category": "injection",
       "need": "high",
       "findings": 5,
+      "detected": true
+    },
+    {
+      "file": "bad_nosql.js",
+      "category": "injection",
+      "need": "high",
+      "findings": 3,
       "detected": true
     },
     {
@@ -78,6 +85,13 @@
     },
     {
       "file": "clean_injection.py",
+      "category": "injection",
+      "findings": 0,
+      "alarming": [],
+      "false_positive": false
+    },
+    {
+      "file": "clean_nosql.js",
       "category": "injection",
       "findings": 0,
       "alarming": [],
